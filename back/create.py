@@ -10,11 +10,11 @@ load_dotenv()
 
 
 def create():
-    user = os.getenv('User')
-    pwd = os.getenv('Password')
-    host = os.getenv('Host')
-    port = '3306'
-    dbname = 'FinalDB'
+    user = os.getenv('MYSQL_USER')
+    pwd = os.getenv('MYSQL_PASSWORD')
+    host = '127.0.0.1'
+    port = '3307'
+    dbname = os.getenv('MYSQL_DATABASE')
     conn_str = 'mysql://{user}:{pwd}@{host}:{port}/{dbname}?charset=utf8'.format(
         user=user,
         pwd=pwd,
