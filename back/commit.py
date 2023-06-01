@@ -1,16 +1,28 @@
 import mysql.connector as m
 import uuid
 import os
+import dump
 
 def commit(userID, branchID, msg):
     
-    # connect setting
-    # assume we have connected to userDB & vcDB
-    user_connection = m.connect(host='localhost', user='root',password='userpw', database='userdb')
-    user_cur = user_connection.cursor(buffered=True)
+    # check if user can commit or not
+    # get 目前 user 的相關資訊
+    query = "SELECT * FROM user WHERE uid = userID;"
+    vc_cur.execute(query)
+    userInfo = vc_cur.fetchall()
     
-    vc_connection = m.connect(host='localhost', user='root',password='vcpw', database='vcdb')
-    vc_cur = vc_connection.cursor(buffered=True)
+    # get 目前 branch 的相關資訊
+    query = "SELECT * FROM branch WHERE bid = branchID"
+    vc_cur.execute(query)
+    branchInfo = vc_cur.fetchall()
+    
+    userNode = userInfo[3]
+    branchTail = branchInfo[2]
+    
+    if (userNode != branchTail):
+        print("Please update to the newest version of the branch first!")
+        return
+        
     
     # dump
     newSQL = dump(user_cur)  # assume return file name
@@ -23,18 +35,14 @@ def commit(userID, branchID, msg):
     upgrade = generate_sql_diff(old, new)
     downgrade = generate_sql_diff(new, old)
     
-    # get 目前 branch 的相關資訊
-    query = "SELECT * FROM branch WHERE bid = 'branchID'"
-    vc_cur.execute(query)
-    branchInfo = vc_cur.fetchall()
     
-    # update commit table    # 目前的 commit table 沒有 branch 的 column
-    insert = "INSERT INTO commit (cid, version, last_version, branch, upgrade, downgrade, msg) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    # update commit table
+    insert = "INSERT INTO commit (version, last_version, branch, upgrade, downgrade, msg) VALUES (%s, %s, %s, %s, %s, %s)"
     
-    version = str(uuid.uuid4())  # uuid (亂數)
-    last_version = branchInfo[2]  # 同 branch 的 head
+    version = str(uuid.uuid4())[:8]  # uuid (八位數的亂數)
+    last_version = branchTail
     
-    val = (cid, version, last_version, branchID, upgrade, downgrade, msg)
+    val = (version, last_version, branchID, upgrade, downgrade, msg)
     vc_cur.execute(insert, val)
     
     # update branch table
@@ -47,10 +55,29 @@ def commit(userID, branchID, msg):
     val = version
     vc_cur.execute(update, val)
     
+    
     # delete old dump file and rename new dump file
     os.remove(oldSQL)
     os.rename(newSQL, oldSQL)
     
+    print("Successfully commit")
+    
+    
     
 if __name__ == '__main__':
-    commit('userID', 'branchID', 'msg')
+    # connect setting
+    user_connection = m.connect(host='localhost', user='root',password='userpw', database='userdb')
+    user_cur = user_connection.cursor(buffered=True)
+    
+    vc_connection = m.connect(host='localhost', user='root',password='vcpw', database='vcdb')
+    vc_cur = vc_connection.cursor(buffered=True)
+    
+    commit(user_cur, vc_cur, 'userID', 'branchID', 'msg')
+    vc_connection.commit()
+    
+    # close connection
+    user_cur.close()
+    user_connection.close()
+    vc_cur.close()
+    vc_connection.close()
+    
