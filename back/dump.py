@@ -2,7 +2,7 @@ import mysql.connector as m
 import os
 import datetime
 
-def dump(user_cur):
+def dump(cur):
 
     # Data for Saving
     data = ""
@@ -27,13 +27,14 @@ def dump(user_cur):
     # Setting for saving db
     now = datetime.datetime.now()
     filename = str("backup_" + now.strftime("%Y%m%d_%H%M") + ".sql")
-    print(filename)
 
     file = open(filename,"w")
     file.writelines(data)
     file.close()
 
-    print("Success")
+    print("Successfully dump " + filename)
+    
+    return filename
     
     
     
