@@ -2,8 +2,9 @@ import mysql.connector as m
 import uuid
 import os
 import dump
+import diff
 
-def commit(userID, branchID, msg):
+def commit(user_cur, vc_cur, userID, branchID, msg):
     
     # check if user can commit or not
     # get 目前 user 的相關資訊
@@ -29,11 +30,13 @@ def commit(userID, branchID, msg):
     oldSQL = branchID + '_dump.sql'  # assume in same folder and named bid_dump.sql
     
     # diff
-    new = parse_sql_script(newSQL)
-    old = parse_sql_script(oldSQL)
-    
-    upgrade = generate_sql_diff(old, new)
-    downgrade = generate_sql_diff(new, old)
+    # new = parse_sql_script(newSQL)
+    # old = parse_sql_script(oldSQL)
+    # upgrade = generate_sql_diff(old, new)
+    # downgrade = generate_sql_diff(new, old)
+
+    upgrade = get_diff(oldSQL, newSQL)
+    downgrade = get_diff(newSQL, oldSQL)
     
     
     # update commit table
