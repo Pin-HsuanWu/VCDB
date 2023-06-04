@@ -31,7 +31,7 @@ def hop(user_cur, vc_cur, userID, destination):
         relay = str(originInfo[2])
         relayBranch = str(userInfo[1])
         
-        while (relay != null):
+        while (relay != ""):
             # 找出下個要去的點
             query = "SELECT * FROM commit WHERE version = relay"
             vc_cur.execute(query)
@@ -45,21 +45,21 @@ def hop(user_cur, vc_cur, userID, destination):
                 found = True
                 break
             
-    else if (destinationTime > originTime):  # future
+    elif (destinationTime > originTime):  # future
         alterData += str(originInfo[3]) + "\n"  # upgrade
         
         # 中繼點
         relay = origin
         relayBranch = str(userInfo[1])
     
-        while (relay != null):
+        while (relay != ""):
             # 找出下個要去的點
             query = "SELECT * FROM commit WHERE last_version = relay"
             vc_cur.execute(query)
             
             relayInfo = vc_cur.fetchone()
             
-            if (relayInfo == null):
+            if (relayInfo == []):
                 break
             
             alterData += str(relayInfo[3]) + "\n"  # upgrade
@@ -91,10 +91,10 @@ def hop(user_cur, vc_cur, userID, destination):
 if __name__ == '__main__':
     
     # connect setting
-    user_connection = m.connect(host='localhost', user='root',password='userpw', database='userdb')
+    user_connection = m.connect(host='localhost', user='root',password='0000', database='userdb')
     user_cur = user_connection.cursor(buffered=True)
     
-    vc_connection = m.connect(host='localhost', user='root',password='vcpw', database='vcdb')
+    vc_connection = m.connect(host='localhost', user='root',password='0000', database='vcdb')
     vc_cur = vc_connection.cursor(buffered=True)
     
     hop(user_cur, vc_cur, 'userID', 'destination')
