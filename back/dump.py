@@ -26,13 +26,14 @@ def dump(cur):
 
     # Setting for saving db
     now = datetime.datetime.now()
+    path = "../branch_tail_schema"
     filename = str("backup_" + now.strftime("%Y%m%d_%H%M") + ".sql")
 
-    file = open(filename,"w")
+    file = open(os.path.join(path, filename),"w")
     file.writelines(data)
     file.close()
 
-    print("Successfully dump " + filename)
+    #print("Successfully dump " + filename)
     
     return filename
     
@@ -40,7 +41,7 @@ def dump(cur):
     
 if __name__ == '__main__':
     # Connect to db
-    connection = m.connect(host='localhost', user='root',password='userpw', database='userdb')
+    connection = m.connect(host='localhost', user='root',password='0000', database='userdb')
     cur = connection.cursor(buffered=True)
     
     dump(cur)
