@@ -37,7 +37,7 @@ class MyApp(tk.Tk):
             label="Login", command=lambda: self.show_frame(LoginPage)
         )
 
-        for F in (StartPage, InitPage, RegisterPage, LoginPage, DashboardPage):
+        for F in (StartPage, InitPage, RegisterPage, LoginPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -187,68 +187,9 @@ class LoginPage(tk.Frame):
             current_version, current_branch = user.login(db_cursor, database_name, name, email)
             messagebox.showinfo('Login', "Login successfully.")
             print(current_version, current_branch)
-            self.controller.show_frame(DashboardPage)
         except Exception as e:
             print(e)
             messagebox.showinfo('Login', e)
-
-# After login show the page below
-
-class DashboardPage(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-
-        label = tk.Label(self, text="Dashboard")
-        label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
-
-        menu = tk.Menu(self.controller)
-        self.controller.config(menu=menu)
-
-        commit_menu = tk.Menu(menu, tearoff=0)
-        menu.add_cascade(label="Commit", menu=commit_menu)
-        commit_menu.add_command(label="Commit Changes", command=self.commit_changes)
-
-        log_menu = tk.Menu(menu, tearoff=0)
-        menu.add_cascade(label="Log", menu=log_menu)
-        log_menu.add_command(label="View Log", command=self.view_log)
-
-        merge_menu = tk.Menu(menu, tearoff=0)
-        menu.add_cascade(label="Merge", menu=merge_menu)
-        merge_menu.add_command(label="Merge Branches", command=self.merge_branches)
-
-        commit_button = tk.Button(
-            self,
-            text='Commit',
-            command=self.commit_changes
-        )
-        commit_button.grid(row=1, column=0, pady=10)
-
-        log_button = tk.Button(
-            self,
-            text='Log',
-            command=self.view_log
-        )
-        log_button.grid(row=1, column=1, pady=10)
-
-        merge_button = tk.Button(
-            self,
-            text='Merge',
-            command=self.merge_branches
-        )
-        merge_button.grid(row=2, column=0, columnspan=2, pady=10)
-
-    def commit_changes(self):
-        # Add your commit logic here
-        messagebox.showinfo('Commit', 'Changes committed successfully.')
-
-    def view_log(self):
-        # Add your log viewing logic here
-        messagebox.showinfo('Log', 'Log viewed successfully.')
-
-    def merge_branches(self):
-        # Add your merge logic here
-        messagebox.showinfo('Merge', 'Branches merged successfully.')
 
 
 app = MyApp()
