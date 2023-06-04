@@ -68,8 +68,8 @@ def merge(mainBranchName, targetBranchName):
         print("Cannot merge branches that does not exist.")
 
     # if conflict exists: show conflicts
-    checkConflict = diff.showConflict(mainSchema, targetSchema)
-    if checkConflict == 1:
+    checkConflict = generate_sql_diff(parse_sql_script(mainSchema), parse_sql_script(targetSchema))
+    if checkConflict != 0:
         print("Schema conflict exists between 2 branches as follows:")
         print(checkConflict)
     
@@ -89,9 +89,8 @@ def merge(mainBranchName, targetBranchName):
         branchInfo = cursor.fetchall()
         branchID = branchInfo[0]
         now = datetime.datetime.now()
-        unixtime = time.mktime(now.timetuple())
         insert = "INSERT INTO commit (cid, version, last_version, branch, upgrade, downgrade, time, msg) VALUES (%s, %s, %s, %s, %s, %s,%s, %s)"
-        val = (version, last_version, branchID, upgrade, downgrade, unixtime, msg)
+        val = (version, last_version, branchID, upgrade, downgrade, now.strftime("%Y%m%d_%H%M"), msg)
         cursor.execute(insert, val)
 
         # update branch table
@@ -102,9 +101,8 @@ def merge(mainBranchName, targetBranchName):
         print(f"Successfully merged {targetBranchName} into {mainBranchName}!")
     return
 
-
-
 if __name__ == '__main__':
-    merge("func1", "func2")
+    merge(func1, func2)
+    
 
 

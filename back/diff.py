@@ -255,8 +255,8 @@ def generate_attribute_string(attributes):
     attribute_str = ", \n".join(attribute_list)
 
     if 'PRIMARY KEY' in attributes:
-        primary_key_columns = ", ".join(attributes['PRIMARY KEY'])
-        attribute_str += f", \nPRIMARY KEY (`{primary_key_columns}`)"
+        primary_key_columns = ", ".join([f"`{col}`" for col in attributes['PRIMARY KEY']])
+        attribute_str += f", \nPRIMARY KEY ({primary_key_columns})"
 
     if 'UNIQUE KEY' in attributes:
         unique_keys = attributes['UNIQUE KEY']
