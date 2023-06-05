@@ -1,4 +1,7 @@
 # description
+    # run create.py to create VCDB
+    # create global variables: VCDB connection
+
 
 
 # import packages
@@ -7,7 +10,6 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 import back.checkout as checkout2
-
 
 
 connection1 = mysql.connector.connect(
