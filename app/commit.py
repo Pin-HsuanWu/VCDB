@@ -12,13 +12,13 @@ def commit(vc_connection, user_cur, vc_cur, userID, branchID, msg):
     query = "SELECT * FROM user WHERE uid = '%s';" % userID
     vc_cur.execute(query)
     userInfo = vc_cur.fetchone()
-    print("userInfo: ", userInfo)
+    # print("userInfo: ", userInfo)
     
     # get 目前 branch 的相關資訊
     query = "SELECT * FROM branch WHERE bid = '%s'" % branchID
     vc_cur.execute(query)
     branchInfo = vc_cur.fetchone()
-    print("branchInfo: ", branchInfo)
+    # print("branchInfo: ", branchInfo)
     
     if (userInfo[3] != ""):  # not initial commit
         userNode = userInfo[3]

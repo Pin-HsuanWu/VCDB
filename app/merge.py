@@ -133,8 +133,8 @@ def merge(main_branch_name, target_branch_name):
     target_branch_version = target_branch_existed[0][1]
 
     # Read main branch tail and target branch tail sql file
-    main_branch_path = f"../branch_tail_schema/{main_branch_name}.sql"
-    target_branch_path = f"../branch_tail_schema/{target_branch_name}.sql"
+    main_branch_path = f"./branch_tail_schema/{main_branch_name}.sql"
+    target_branch_path = f"./branch_tail_schema/{target_branch_name}.sql"
     main_schema = read_sql_file(main_branch_path)
     target_schema = read_sql_file(target_branch_path)
     # Parse sql scripts into dictionary
