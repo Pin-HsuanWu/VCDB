@@ -3,21 +3,7 @@ import mysql.connector
 import uuid
 import datetime
 import time
-
-"""
-Database setup for test
-"""
-vcdb_connection = mysql.connector.connect(
-    user="root", password="dbcourse", host='127.0.0.1', port="3306", database='vcdb')
-print("VCDB connected.")
-vc_cursor = vcdb_connection.cursor()
-
-userdb_connection = mysql.connector.connect(
-user="root", password="dbcourse", host='127.0.0.1', port="3306", database='userdb')
-print("user DB connected.")
-user_cursor = userdb_connection.cursor()
-
-
+from globals import *
 
 
 # Add branch format for sql script in different branch
@@ -34,8 +20,6 @@ def branch_format(branch_list, branch_name):
 # Generate attribute string for column definition
 def check_table_conflicts(is_conflict, table_name, branch1_name, table1, branch2_name, table2):
     sql_script = ""
-    
-    conflicts = []
     attribute_str = ""
     nonconflict_attr_dict = {}
 
@@ -131,8 +115,6 @@ def merge_schema(commit1_dict, commit2_dict):
 
 
 def merge(main_branch_name, target_branch_name):
-    global current_uid
-    print(f"current_uid: {current_uid}")
     
     # Check if 2 branches exist
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
@@ -205,13 +187,10 @@ def merge(main_branch_name, target_branch_name):
         val = (merged_version, main_branch_id, current_uid)
         vc_cursor.execute(update, val)
 
-        vcdb_connection.commit()
+        vc_connect.commit()
 
         print(f"Successfully merged {target_branch_name} into {main_branch_name}!")
     return msg
-
-# if __name__ == '__main__':
-#     merge('branch1', 'branch2', 'fakeuid')
     
 
 
