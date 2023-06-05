@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import user
 
+
 # Global variables
 database_name = 'DBVC'
 db_connect = None
