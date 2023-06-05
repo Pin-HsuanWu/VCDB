@@ -1,16 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox
-import globals
 from checkout import checkout
 
-# Global variables
-database_name = 'DBVC'
-db_connect = None
-db_cursor = None
-current_version = None
-current_branch = None
+# # Global variables
+# database_name = 'DBVC'
+# db_connect = None
+# db_cursor = None
+# current_version = None
+# current_branch = None
 
-checkout("func2", False)
 
 
 # class MyApp(tk.Tk):
