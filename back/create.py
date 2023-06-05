@@ -40,7 +40,7 @@ creating_table = '''CREATE TABLE user(
     uid varchar(500) not null,
     name varchar(125) not null,
     email varchar(125) not null,
-    current_version varchar(500) not null,
+    current_version varchar(500),
     current_branch varchar(500) not null,
     PRIMARY KEY (`uid`)
 )'''
