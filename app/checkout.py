@@ -18,12 +18,12 @@ from . import diff
 def checkout(newBranchName, new=False):
     print("start checking out.")
     connection1 = mysql.connector.connect(
-        user="root", password="tubecity0212E_", host='127.0.0.1', port="3306", database='vcdb')
+        user="myuser", password="mypassword", host='127.0.0.1', port="3306", database='vcdb')
     print("VCDB connected.")
     vc_cursor = connection1.cursor()
 
     connection2 = mysql.connector.connect(
-    user="root", password="tubecity0212E_", host='127.0.0.1', port="3306", database='userdb')
+    user="myuser", password="mypassword", host='127.0.0.1', port="3306", database='userdb')
     print("user DB connected.")
     user_cursor = connection2.cursor()
 
@@ -46,9 +46,9 @@ def checkout(newBranchName, new=False):
 
             # check if tail == current schema
             # dump current userdb's schema
-            dump.dump(user_cursor)
+            dumped_tmp_fileName = dump.dump(user_cursor)
             # check differences
-            userCurrentSchema = diff.read_sql_file(f"./tmpfile.sql")
+            userCurrentSchema = diff.read_sql_file(f"./{dumped_tmp_fileName}.sql")
             currentBranchTail = diff.read_sql_file(f"./branch_tail_schema/{currentBranchName}.sql")
             result = diff.get_diff(currentBranchTail, userCurrentSchema)
             if result != "":
