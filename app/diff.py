@@ -23,6 +23,10 @@ def parse_sql_script(sql_script):
     current_table = ""
     current_attributes = {}
 
+    if not sql_script:
+        return table_dict
+    
+
     create_table_pattern = re.compile(r"CREATE TABLE `(\w+)` \((.*?)\)(?:\s*ENGINE.*?)?;", re.DOTALL)
     attribute_pattern = re.compile(r"\n  `(\S*?)` (.*?)(,|\n)(?![^()]*\))", re.DOTALL)
     primary_key_pattern = re.compile(r"PRIMARY KEY \((.*?)\)", re.DOTALL)
@@ -324,9 +328,19 @@ def generate_sql_diff(commit1_dict, commit2_dict):
 
 
 def get_diff(commit1_sql, commit2_sql):
-    # Read sql file
-    commit1 = read_sql_file(commit1_sql)
-    commit2 = read_sql_file(commit2_sql)
+    if commit1_sql and commit2_sql:
+        # Read both sql file
+        commit1 = read_sql_file(commit1_sql)
+        commit2 = read_sql_file(commit2_sql)
+    elif commit1_sql:
+        # Read commit1_sql
+        commit1 = read_sql_file(commit1_sql)
+        commit2 = None
+    else:
+        # Read commit2_sql
+        commit1 = None
+        commit2 = read_sql_file(commit2_sql)
+    
 
     # Parse sql script into dictionary
     commit1_dict = parse_sql_script(commit1)
