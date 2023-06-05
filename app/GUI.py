@@ -2,8 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import user
-from merge import merge
-from diff import *
+import commit
 
 # Global variables
 database_name = 'vcdb'
@@ -12,9 +11,8 @@ vc_cursor = None
 user_connect = None
 user_cursor = None
 current_version = None
-current_branch = None
-current_uid = 'TEST USER'
-
+current_bid = None
+current_uid = None
 
 
 class MyApp(tk.Tk):
@@ -43,8 +41,11 @@ class MyApp(tk.Tk):
         command_menu.add_command(
             label="Login", command=lambda: self.show_frame(LoginPage)
         )
+        command_menu.add_command(
+            label="commit", command=lambda: self.show_frame(CommitPage)
+        )
 
-        for F in (StartPage, InitPage, RegisterPage, LoginPage, DashboardPage):
+        for F in (StartPage, InitPage, RegisterPage, LoginPage, CommitPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -74,6 +75,7 @@ class InitPage(tk.Frame):
         pwd_var = tk.StringVar()
         host_var = tk.StringVar()
         port_var = tk.StringVar()
+        userDB_var = tk.StringVar()
 
         user_label = tk.Label(self, text='User:')
         user_label.grid(row=1, column=0, sticky='e')
@@ -99,21 +101,27 @@ class InitPage(tk.Frame):
         port_entry.insert(0, '3306')
         port_entry.grid(row=4, column=1)
 
+        userDB_label = tk.Label(self, text='DB Name:')
+        userDB_label.grid(row=4, column=0, sticky='e')
+        userDB_entry = tk.Entry(self, textvariable=userDB_var)
+        userDB_entry.insert(0, 'db_class')
+        userDB_entry.grid(row=4, column=1)
+
         parse_button = tk.Button(
             self,
             text='Parse',
             command=lambda: self.init_database(
-                user_var.get(), pwd_var.get(), host_var.get(), port_var.get()
+                user_var.get(), pwd_var.get(), host_var.get(), port_var.get(), userDB_var.get()
             ),
         )
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
-    def init_database(self, db_user, pwd, host, port):
-        global db_connect, db_cursor
-        db_connect, db_cursor = user.init(
-            db_user, pwd, host, port, database_name
+    def init_database(self, db_user, pwd, host, port, user_db):
+        global vc_connect, vc_cursor, user_connect, user_cursor
+        vc_connect, vc_cursor, user_connect, user_cursor = user.init(
+            db_user, pwd, host, port, user_db
         )
-        print(db_connect, db_cursor)
+        print("vc_connect: ",vc_connect, "vc_cursor: ", vc_cursor, "user_connect: ", user_connect, "user_cursor: ",user_cursor)
         messagebox.showinfo('Init', 'Database initialized successfully.')
 
 
@@ -132,11 +140,13 @@ class RegisterPage(tk.Frame):
         name_label.grid(row=1, column=0, sticky='e')
         name_entry = tk.Entry(self, textvariable=name_var)
         name_entry.grid(row=1, column=1)
+        name_entry.insert(0, 'Leo')
 
         email_label = tk.Label(self, text='User Email:')
         email_label.grid(row=2, column=0, sticky='e')
         email_entry = tk.Entry(self, textvariable=email_var)
         email_entry.grid(row=2, column=1)
+        email_entry.insert(0, 'Leo@gmail.com')
 
         parse_button = tk.Button(
             self,
@@ -148,13 +158,13 @@ class RegisterPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def register_user(self, name, email):
-        global db_connect, db_cursor, database_name
-        if db_connect is None:
+        global vc_connect, vc_cursor, database_name, current_bid
+        if vc_connect is None:
             print("Error: Database connection is not initialized. Run 'init' command first.")
             messagebox.showinfo('Register', "Error: Database connection is not initialized. Run 'init' command first.")
         else:
-            user.register(db_connect, db_cursor, database_name, name, email)
-
+            current_bid=user.register(vc_connect, vc_cursor, database_name, name, email)
+            print(current_bid)
             messagebox.showinfo('Register', 'User registered successfully.')
 
 
@@ -193,60 +203,141 @@ class LoginPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def login_user(self, name, email):
+        global current_uid
         global current_version
-        global current_branch
+        global current_bid
         try:
-            current_version, current_branch = user.login(db_cursor, database_name, name, email)
+            current_uid, current_version, current_bid = user.login(vc_cursor, database_name, name, email)
             messagebox.showinfo('Login', "Login successfully.")
-            print(current_version, current_branch)
-            self.controller.show_frame(DashboardPage)
+            print(current_uid, current_version, current_bid)
+            self.controller.show_frame(CommitPage)
         except Exception as e:
             print(e)
             messagebox.showinfo('Login', e)
 
 # After login show the page below
+# class LogPage(tk.Frame):
+#     def __init__(self, parent, controller):
+#         tk.Frame.__init__(self, parent)
+#         self.controller = controller
 
-class DashboardPage(tk.Frame):
+#         self.frames = {}
+
+#         label = tk.Label(self, text="Log")
+#         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+
+#         name_var = tk.StringVar()
+#         email_var = tk.StringVar()
+
+#         name_label = tk.Label(self, text='User Name:')
+#         name_label.grid(row=1, column=0, sticky='e')
+#         name_entry = tk.Entry(self, textvariable=name_var)
+#         name_entry.insert(0, 'Leo')
+#         name_entry.grid(row=1, column=1)
+
+#         email_label = tk.Label(self, text='User Email:')
+#         email_label.grid(row=2, column=0, sticky='e')
+#         email_entry = tk.Entry(self, textvariable=email_var)
+#         email_entry.insert(0, 'Leo@gmail.com')
+#         email_entry.grid(row=2, column=1)
+
+#         parse_button = tk.Button(
+#             self,
+#             text='Parse',
+#             command=lambda: self.login_user(
+#                 name_var.get(), email_var.get()
+#             ),
+#         )
+#         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+#     def login_user(self, name, email):
+#         global current_version
+#         global current_bid
+#         try:
+#             current_version, current_bid = user.login(vc_cursor, database_name, name, email)
+#             messagebox.showinfo('Login', "Login successfully.")
+#             print(current_version, current_bid)
+#             self.controller.show_frame()
+#         except Exception as e:
+#             print(e)
+#             messagebox.showinfo('Login', e)
+
+class CommitPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Dashboard")
+        self.frames = {}
+
+        label = tk.Label(self, text="Commit")
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
-        commit_button = tk.Button(
+        commit_var = tk.StringVar()
+
+        commit_label = tk.Label(self, text='Commit Message:')
+        commit_label.grid(row=1, column=0, sticky='e')
+        commit_entry = tk.Entry(self, textvariable=commit_var)
+        commit_entry.insert(0, 'Enter your commit message')
+        commit_entry.grid(row=1, column=1)
+
+        parse_button = tk.Button(
             self,
-            text='Commit',
-            command=self.commit_changes
+            text='commit',
+            command=lambda: self.commit_user(
+                commit_var.get()
+            ),
         )
-        commit_button.grid(row=1, column=0, pady=10)
+        parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
-        log_button = tk.Button(
-            self,
-            text='Log',
-            command=self.view_log
-        )
-        log_button.grid(row=1, column=1, pady=10)
+    def commit_user(self, msg):
+        global vc_connect, user_cursor, vc_cursor, current_uid, current_bid
 
-        merge_button = tk.Button(
-            self,
-            text='Merge',
-            command=self.merge_branches
-        )
-        merge_button.grid(row=1, column=2, columnspan=2, pady=10)
+        try:
+            print(vc_connect, user_cursor, vc_cursor, current_uid, current_bid)
+            commit.commit(vc_connect, user_cursor, vc_cursor, current_uid, current_bid, msg)
+            messagebox.showinfo('Commit', "Commit successfully.")
+        except Exception as e:
+            print(e)
+            messagebox.showinfo('Commit', e)
 
-    def commit_changes(self):
-        # Add your commit logic here
-        messagebox.showinfo('Commit', 'Changes committed successfully.')
+# class MergePage(tk.Frame):
+#     def __init__(self, parent, controller):
+#         tk.Frame.__init__(self, parent)
+#         self.controller = controller
 
-    def view_log(self):
-        # Add your log viewing logic here
-        messagebox.showinfo('Log', 'Log viewed successfully.')
+#         self.frames = {}
 
-    def merge_branches(self):
-        # Add your merge logic here
-        messagebox.showinfo('Merge', 'Branches merged successfully.')
+#         label = tk.Label(self, text="Merge")
+#         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
+#         commit_var = tk.StringVar()
+
+#         commit_label = tk.Label(self, text='Commit Message:')
+#         commit_label.grid(row=1, column=0, sticky='e')
+#         name_entry = tk.Entry(self, textvariable=commit_var)
+#         name_entry.insert(0, 'Leo')
+#         name_entry.grid(row=1, column=1)
+
+#         parse_button = tk.Button(
+#             self,
+#             text='Parse',
+#             command=lambda: self.login_user(
+#                 commit_var.get()
+#             ),
+#         )
+#         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+#     def login_user(self, name, email):
+#         global current_version
+#         global current_bid
+#         try:
+#             current_version, current_bid = user.login(db_cursor, database_name, name, email)
+#             messagebox.showinfo('Login', "Login successfully.")
+#             print(current_version, current_bid)
+#             self.controller.show_frame()
+#         except Exception as e:
+#             print(e)
+#             messagebox.showinfo('Login', e)
 
 app = MyApp()
 app.geometry("800x600")

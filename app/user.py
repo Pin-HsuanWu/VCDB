@@ -1,25 +1,29 @@
 import mysql.connector
-from create import create
+import create
 
 def init(user, pwd, host, port, database_name):
 
     # set DB connection
-    global db_connect
-    global db_cursor
+    global vc_connect
+    global vc_cursor
+    global user_connect
+    global user_cursor
     try:
-        db_connect = mysql.connector.connect(host=host, user=user, passwd=pwd)
-        db_cursor = db_connect.cursor()
+        user_connect = mysql.connector.connect(host=host, database=database_name, user=user, passwd=pwd)
+        user_cursor = user_connect.cursor()
 
-        # create DBVC
-        db_cursor.execute("CREATE DATABASE IF NOT EXISTS " + database_name)
-        db_cursor.execute("USE " + database_name)
+        # create vcdb
+        user_cursor.execute("CREATE DATABASE IF NOT EXISTS vcdb")
+        vc_connect  = mysql.connector.connect(host=host, database="vcdb", user=user, passwd=pwd)
+        vc_cursor = vc_connect.cursor()
+        vc_cursor.execute("USE vcdb")
 
         # create table in DBVC
-        create(user, pwd, host, port, database_name)
+        create.create(user, pwd, host, port)
 
         print("Im init")
 
-        return db_connect, db_cursor
+        return vc_connect, vc_cursor, user_connect, user_cursor
     
     except Exception as e:
         print(e)
@@ -30,28 +34,37 @@ def init(user, pwd, host, port, database_name):
 
 def register(db_connect, db_cursor, database_name, user_name, user_email):
 
+    global current_bid
     # create uuid
     import uuid
-    user_uuid = uuid.uuid4
+    user_uuid = str(uuid.uuid4())
 
     #Update user table
     db_cursor.execute("USE " + database_name)
-    db_cursor.execute(f"INSERT INTO user (uid, name, email) VALUES ('{user_uuid}', '{user_name}', '{user_email}')")
+    db_cursor.execute(f"INSERT INTO branch (name) VALUES ('main')")
     db_connect.commit()
+    db_cursor.execute(f"INSERT INTO user (uid, name, email, current_bid) VALUES ('{user_uuid}', '{user_name}', '{user_email}', '1')")
+    db_connect.commit()
+    db_cursor.execute(f"select bid from branch where name = 'main'")
+    result = db_cursor.fetchone()
+    current_bid = result
+    return current_bid
 
 def login(db_cursor, database_name, user_name, user_email):
 
     #set current_version and brench
+    global current_uid
     global current_version
-    global current_branch
-
+    global current_bid
     #get user's version and branch
     try:
         db_cursor.execute("USE " + database_name)
-        db_cursor.execute(f"select current_version, current_branch from user where name = '{user_name}' AND email = '{user_email}'")
+        db_cursor.execute(f"select uid, current_version, current_bid from user where name = '{user_name}' AND email = '{user_email}'")
         result = db_cursor.fetchone()
-        current_version, current_branch = result
-        return current_version, current_branch
+        current_uid, current_version, current_bid = result
+        # db_cursor.execute(f"select bid from branch where name = '{user_name}' AND email = '{user_email}'")
+
+        return current_uid, current_version, current_bid
 
     except Exception as e:
         print(e)
