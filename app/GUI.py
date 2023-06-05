@@ -1,8 +1,8 @@
-# import tkinter as tk
-# from tkinter import messagebox
-# import user
-from back.merge import merge
-from back.diff import *
+import tkinter as tk
+from tkinter import messagebox
+import user
+from merge import merge
+from diff import *
 
 # Global variables
 database_name = 'vcdb'

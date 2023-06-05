@@ -1,4 +1,4 @@
-from back.diff import read_sql_file ,parse_sql_script, generate_attribute_string, generate_sql_diff, get_diff
+from diff import read_sql_file ,parse_sql_script, generate_attribute_string, generate_sql_diff, get_diff
 import mysql.connector
 import uuid
 import datetime

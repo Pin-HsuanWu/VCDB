@@ -2,7 +2,7 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 load_dotenv()
-import back.checkout as checkout2
+import checkout as checkout2
 
 
 
