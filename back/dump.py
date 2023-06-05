@@ -1,26 +1,15 @@
-<<<<<<< HEAD
 import mysql.connector as m
 import os
 import datetime
 
-=======
-import mysql.connector
-import os
-import datetime
-
-
->>>>>>> checkout
 def dump(cur):
 
     # Data for Saving
     data = ""
-<<<<<<< HEAD
     # data += "DROP DATABASE IF EXISTS `" + db + "`;\n"
     # data += "CREATE DATABASE `" + db + "`;\n"
     # data += "USE `" + db + "`;\n"
     # data += "\n\n"
-=======
->>>>>>> checkout
 
     # Getting all table names
     cur.execute('SHOW TABLES;')
@@ -29,7 +18,6 @@ def dump(cur):
         tables.append(record[0])
 
     for table in tables:
-<<<<<<< HEAD
         # data += "DROP TABLE IF EXISTS `" + str(table) + "`;"
 
         cur.execute("SHOW CREATE TABLE `" + str(table) + "`;")
@@ -61,22 +49,3 @@ if __name__ == '__main__':
     # Close connection
     cur.close()
     connection.close()
-=======
-        cur.execute("SHOW CREATE TABLE `" + str(table) + "`;")
-        data += "\n" + str(cur.fetchone()[1]) + ";\n\n"
-
-    # Setting for saving db
-    now = datetime.datetime.now()
-    filename = str("tmpfile" + ".sql")
-
-    file = open(filename, "w")
-    file.writelines(data)
-    file.close()
-
-    print("Successfully dump " + filename)
-
-    return filename
-
-
-#dump(user_cursor)
->>>>>>> checkout
