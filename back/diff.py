@@ -8,20 +8,13 @@ Example
 
 
 # Read SQL file
-def readSqlFile(filename):
+def read_sql_file(filename):
     # Open and read the file as a single buffer
     fd = open(filename, 'r')
-    sqlFile = fd.read()
+    sql_file = fd.read()
     fd.close()
-
-    # all SQL commands (split on ';')
-    sqlCommands = sqlFile.split(';')
-
-    # Execute every command from the input file
-    for command in sqlCommands:
-        print(command)
         
-    return sqlFile
+    return sql_file
 
 
 
@@ -278,7 +271,6 @@ def generate_attribute_string(attributes):
     return attribute_str
 
 
-
 def generate_sql_diff(commit1_dict, commit2_dict):
     sql_script = ""
 
@@ -292,7 +284,6 @@ def generate_sql_diff(commit1_dict, commit2_dict):
             # Table added in commit 2
             attributes2 = commit2_dict[table_name]
             attribute_str = generate_attribute_string(attributes2)
-
             sql_script += f"CREATE TABLE `{table_name}` (\n{attribute_str});\n"
         elif table_name not in commit2_dict:
             # Table deleted in commit 2
@@ -332,15 +323,14 @@ def generate_sql_diff(commit1_dict, commit2_dict):
     return sql_script
 
 
-def get_diff(commit1, commit2):
+def get_diff(commit1_sql, commit2_sql):
+    # Read sql file
+    commit1 = read_sql_file(commit1_sql)
+    commit2 = read_sql_file(commit2_sql)
+
+    # Parse sql script into dictionary
     commit1_dict = parse_sql_script(commit1)
     commit2_dict = parse_sql_script(commit2)
+
+    # Generate sql diff script
     return generate_sql_diff(commit1_dict, commit2_dict)
-
-
-
-
-
-
-
-

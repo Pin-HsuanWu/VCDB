@@ -48,6 +48,10 @@ def commit(vc_connection, user_cur, vc_cur, userID, branchID, msg):
     if (branchInfo[2] != ""):
         upgrade = get_diff(os.path.join(path, oldSQL), os.path.join(path, newSQL))
         downgrade = get_diff(os.path.join(path, newSQL), os.path.join(path, oldSQL))
+        # print("upgrade: ",  upgrade)
+        # print("downgrade: ", downgrade)
+        # print(os.path.join(path, oldSQL))
+        # print(os.path.join(path, newSQL))
     else:
         with open(os.path.join(path, newSQL)) as f:
             lines = f.readlines()
@@ -56,7 +60,7 @@ def commit(vc_connection, user_cur, vc_cur, userID, branchID, msg):
 
     # check if upgrade = Null
     if (upgrade == ""):
-        os.remove(os.path.join(path, newSQL))
+        # os.remove(os.path.join(path, newSQL))
         print("Nothing to commit")
         return
     
@@ -69,7 +73,7 @@ def commit(vc_connection, user_cur, vc_cur, userID, branchID, msg):
         last_version = branchTail
     else:
         last_version = ""
-    time = datetime.datetime.now()
+    time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     val = (version, branchID, last_version, upgrade, downgrade, time, msg)
     vc_cur.execute(insert, val)
@@ -105,7 +109,7 @@ if __name__ == '__main__':
     # test data
     userID = '12345678'
     branchID = '1'
-    msg = '2nd commit'
+    msg = '3rd commit'
 
     commit(vc_connection, user_cur, vc_cur, userID, branchID, msg)
     
