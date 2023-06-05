@@ -5,7 +5,9 @@ services:
       - ./mysql:/docker-entrypoint-initdb.d
     restart: always
     environment:
-          MYSQL_ROOT_PASSWORD: 'mypassword'
+        MYSQL_ROOT_PASSWORD: mypassword
+        MYSQL_USER: myuser
+        MYSQL_PASSWORD: mypassword
     ports:
       - '3305:3306'
     healthcheck:
@@ -16,5 +18,8 @@ services:
   pythonapp:
     build: .
     command: sh -c "sleep 10s ; python3 ./init.py"
+    ports:
+    - "5001:5001"
     depends_on:
       - mysql
+

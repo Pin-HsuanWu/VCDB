@@ -1,2 +1,4 @@
 .env
 venv/
+.DS_Store
+branch_tail_schema/.DS_Store
