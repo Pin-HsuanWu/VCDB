@@ -6,10 +6,11 @@ def globalvar_initiation():
     global db_cursor
     global current_version
     global current_branch
-    global connection1
-    global connection2
+    global vc_connect
+    global user_connect
     global vc_cursor
     global user_cursor
+    global current_uid
 
     userid = None
     userdb_name = None
@@ -17,10 +18,11 @@ def globalvar_initiation():
     db_cursor = None
     current_version = None
     current_branch = None
-    connection1 = None
-    connection2 = None
+    vc_connect = None
+    user_connect = None
     vc_cursor = None
     user_cursor = None
+    current_uid = 'Test'
 
 
 globalvar_initiation()

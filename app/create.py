@@ -6,10 +6,10 @@ load_dotenv()
 def create():
     try:
         # connect to vcdb ip address 127.0.0.1 & port 3306 (currently using local, then switch to remote computer)
-        connection1 = mysql.connector.connect(
+        vc_connect = mysql.connector.connect(
             user="myuser", password="mypassword", host='127.0.0.1', port="3306")  
 
-        vc_cursor = connection1.cursor()
+        vc_cursor = vc_connect.cursor()
         vc_cursor.execute("CREATE DATABASE vcdb;")
 
         # creating tables for vcdb: branch, commit, user, merge
@@ -19,7 +19,7 @@ def create():
             tail varchar(500),
             PRIMARY KEY (bid));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
 
         creating_table = '''CREATE TABLE commit(
@@ -33,7 +33,7 @@ def create():
             msg varchar(500),
             PRIMARY KEY (version));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
 
         creating_table = '''CREATE TABLE user(
@@ -48,7 +48,7 @@ def create():
             CONSTRAINT FK_UserBranch FOREIGN KEY (current_bid)
             REFERENCES branch(bid));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
 
         creating_table = '''CREATE TABLE merge(
@@ -63,7 +63,7 @@ def create():
             CONSTRAINT FK_MergeCommit3 FOREIGN KEY (target_branch_version)
             REFERENCES commit(version));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
         vc_cursor.execute('show tables;')
         vc_alltables = vc_cursor.fetchall()
