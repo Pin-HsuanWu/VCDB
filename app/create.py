@@ -16,7 +16,7 @@ def create():
         creating_table = '''CREATE TABLE branch(
             bid int not null AUTO_INCREMENT,
             name varchar(125) not null,
-            tail varchar(500) not null,
+            tail varchar(500),
             PRIMARY KEY (bid));'''
         vc_cursor.execute(creating_table)
         connection1.commit()
