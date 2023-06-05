@@ -11,6 +11,7 @@ def globalvar_initiation():
     global vc_cursor
     global user_cursor
     global current_uid
+    global database_name
 
     userid = None
     userdb_name = None
@@ -22,7 +23,8 @@ def globalvar_initiation():
     user_connect = None
     vc_cursor = None
     user_cursor = None
-    current_uid = 'Test'
+    current_uid = None
+    database_name = 'vcdb'
 
 
 globalvar_initiation()

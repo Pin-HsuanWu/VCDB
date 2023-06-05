@@ -3,16 +3,17 @@ from tkinter import ttk
 from tkinter import messagebox
 import user
 import commit
+from globals import *
 
 # Global variables
-database_name = 'vcdb'
-vc_connect = None
-vc_cursor = None
-user_connect = None
-user_cursor = None
-current_version = None
-current_bid = None
-current_uid = None
+# database_name = 'vcdb'
+# vc_connect = None
+# vc_cursor = None
+# user_connect = None
+# user_cursor = None
+# current_version = None
+# current_bid = None
+# current_uid = None
 
 
 class MyApp(tk.Tk):
