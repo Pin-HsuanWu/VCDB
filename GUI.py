@@ -1,14 +1,19 @@
-import tkinter as tk
-from tkinter import messagebox
-import user
-
+# import tkinter as tk
+# from tkinter import messagebox
+# import user
+from back.merge import merge
+from back.diff import *
 
 # Global variables
-database_name = 'DBVC'
-db_connect = None
-db_cursor = None
+database_name = 'vcdb'
+vc_connect = None
+vc_cursor = None
+user_connect = None
+user_cursor = None
 current_version = None
 current_branch = None
+current_uid = 'TEST USER'
+
 
 
 class MyApp(tk.Tk):

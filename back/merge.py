@@ -1,4 +1,4 @@
-from diff import read_sql_file ,parse_sql_script, generate_attribute_string, generate_sql_diff, get_diff
+from back.diff import read_sql_file ,parse_sql_script, generate_attribute_string, generate_sql_diff, get_diff
 import mysql.connector
 import uuid
 import datetime
@@ -130,7 +130,9 @@ def merge_schema(commit1_dict, commit2_dict):
 
 
 
-def merge(main_branch_name, target_branch_name, current_uid):
+def merge(main_branch_name, target_branch_name):
+    global current_uid
+    print(f"current_uid: {current_uid}")
     
     # Check if 2 branches exist
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
@@ -208,8 +210,8 @@ def merge(main_branch_name, target_branch_name, current_uid):
         print(f"Successfully merged {target_branch_name} into {main_branch_name}!")
     return msg
 
-if __name__ == '__main__':
-    merge('branch1', 'branch2', 'fakeuid')
+# if __name__ == '__main__':
+#     merge('branch1', 'branch2', 'fakeuid')
     
 
 
