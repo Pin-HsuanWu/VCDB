@@ -13,13 +13,6 @@ def read_sql_file(filename):
     fd = open(filename, 'r')
     sql_file = fd.read()
     fd.close()
-
-    # all SQL commands (split on ';')
-    sql_commands = sql_file.split(';')
-
-    # Execute every command from the input file
-    for command in sql_commands:
-        print(command)
         
     return sql_file
 
