@@ -7,15 +7,15 @@ import time
 """
 Database setup for test
 """
-connection1 = mysql.connector.connect(
+vcdb_connection = mysql.connector.connect(
     user="root", password="dbcourse", host='127.0.0.1', port="3306", database='vcdb')
 print("VCDB connected.")
-cursor = connection1.cursor()
+vc_cursor = vcdb_connection.cursor()
 
-connection2 = mysql.connector.connect(
+userdb_connection = mysql.connector.connect(
 user="root", password="dbcourse", host='127.0.0.1', port="3306", database='userdb')
 print("user DB connected.")
-user_cursor = connection2.cursor()
+user_cursor = userdb_connection.cursor()
 
 
 
@@ -130,82 +130,88 @@ def merge_schema(commit1_dict, commit2_dict):
 
 
 
-def merge(main_branch_name, target_branch_bame):
-    # Read sql file by dump.py, then translate to json by diff.py
-    # assume each branch's tail schema is stored in the following file name: {branchName}.sql
-    main_branch_path = f"../branch_tail_schema/{main_branch_name}.sql"
-    target_branch_path = f"../branch_tail_schema/{target_branch_bame}.sql"
+def merge(main_branch_name, target_branch_name, current_uid):
+    
+    # Check if 2 branches exist
+    query = "SELECT name, tail FROM branch WHERE name = (%s);"
+    vc_cursor.execute(query, (main_branch_name, ))
+    main_branch_existed = vc_cursor.fetchall()
+    print(main_branch_existed)
+    if not main_branch_existed:
+        print(f"Branch {main_branch_name} does not exist.")
+        return
+    main_branch_version = main_branch_existed[0][1]
 
+    vc_cursor.execute(query, (target_branch_name,))
+    target_branch_existed = vc_cursor.fetchall()
+    if not target_branch_existed:
+        print(f"Branch {target_branch_name} does not exist.")
+        return
+    target_branch_version = target_branch_existed[0][1]
+
+    # Read main branch tail and target branch tail sql file
+    main_branch_path = f"../branch_tail_schema/{main_branch_name}.sql"
+    target_branch_path = f"../branch_tail_schema/{target_branch_name}.sql"
     main_schema = read_sql_file(main_branch_path)
     target_schema = read_sql_file(target_branch_path)
-
     # Parse sql scripts into dictionary
     main_schema_dict = parse_sql_script(main_schema)
     target_schema_dict = parse_sql_script(target_schema)
 
-    # check if 2 branch exists
-    query = "SELECT name FROM branch;"
-    cursor.execute(query)
-    all_branch_names = cursor.fetchall()
-    all_branch_names = ["%s" % x for x in all_branch_names]
-    flag1 = False
-    flag2 = False
-    if main_branch_name in all_branch_names:
-        flag1 = True
-    if target_branch_bame in all_branch_names:
-        flag2 = True
-    if flag1 & flag2 == False:
-        print("Cannot merge branches that does not exist.")
-
+    # Check if there is any conflict between 2 branches
+    is_conflict = check_branch_conflicts(main_branch_name, main_schema_dict, target_branch_name, target_schema_dict)
     # if conflict exists: show conflicts
-    is_conflict = check_branch_conflicts(main_branch_name, main_schema_dict, target_branch_bame, target_schema_dict)
     if is_conflict[0]:
         print("Schema conflict exists between 2 branches as follows:")
         conflict_sql_script = is_conflict[1]
         print(conflict_sql_script)
-    
+        return conflict_sql_script
     # if there is no conflict: merge 2 branches
     else:
+        # Merged schema
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
         downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
         upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
 
-        msg = f"Merge {target_branch_bame} into {main_branch_name}"
-        version = str(uuid.uuid4()) 
 
+        msg = f"Merge {target_branch_name} into {main_branch_name}"
+        merged_version = str(uuid.uuid4())[:8]
 
-        # TODO!!!
-        query = f"SELECT * FROM branch WHERE  name = '{main_branch_name}'"
-        cursor.execute(query)
-        branchInfo = cursor.fetchall()[0]
-        print(branchInfo)
+        # Get branch info
+        query = f"SELECT * FROM branch WHERE name = '{main_branch_name}'"
+        vc_cursor.execute(query)
+        branchInfo = vc_cursor.fetchall()[0]
         last_version = branchInfo[2]
-        print(f'last_version: {last_version}')
-
-        # query = f"SELECT branch FROM commit WHERE version = '{main_branch_name}'"
-
-        # query = f"SELECT * FROM branch WHERE name = '{main_branch_name}'"
-        # cursor.execute(query)
-        # branchInfo = cursor.fetchall()
         branchID = branchInfo[0]
-        print(f'branchID: {branchID}')
 
         # Insert into commit table
         now = datetime.datetime.now()
-        insert = "INSERT INTO commit (version, branch, last_version, upgrade, downgrade, time, msg) VALUES (%s, %s, %s, %s, %s, %s,%s, %s)"
-        val = (version, last_version, branchID, upgrade, downgrade, now.strftime("%Y-%m-%d %H:%M:%S"), msg)
-        cursor.execute(insert, val)
+        insert = "INSERT INTO commit (version, branch, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        val = (merged_version, branchID, last_version, upgrade, downgrade, now.strftime("%Y-%m-%d %H:%M:%S"), current_uid, msg)
+        vc_cursor.execute(insert, val)
 
-        # update branch table
-        update = f"UPDATE branch SET tail = (%s) WHERE bid = {branchID};"
-        val = version
-        cursor.execute(update, val)
+        # Update branch table
+        update = "UPDATE branch SET tail = %s WHERE bid = %s;"
+        val = (merged_version, branchID)
+        vc_cursor.execute(update, val)
 
-        print(f"Successfully merged {target_branch_bame} into {main_branch_name}!")
-    return conflict_sql_script
+        # Insert into merge table
+        insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
+        val = (merged_version, main_branch_version, target_branch_version)
+        vc_cursor.execute(insert, val)
+
+        # Update user table
+        update = "UPDATE user SET current_version = %s, current_branch = %s WHERE uid = %s;"
+        val = (merged_version, main_branch_name, current_uid)
+        vc_cursor.execute(update, val)
+
+        vcdb_connection.commit()
+
+        print(f"Successfully merged {target_branch_name} into {main_branch_name}!")
+    return msg
 
 if __name__ == '__main__':
-    merge('branch1', 'branch2')
+    merge('branch1', 'branch2', 'fakeuid')
     
 
 
