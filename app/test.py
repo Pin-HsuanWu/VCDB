@@ -4,30 +4,45 @@
 from checkout import checkout
 import mysql.connector
 import globals
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 
 def init_connections():
-    print("initing")
+    print("start initing connections.")
+
+    # get 2 connections
+    user = os.getenv("MYSQL_USER")
+    pwd = os.getenv("MYSQL_PASSWORD")
+
     connection1 = mysql.connector.connect(
-        user="root", password="tubecity0212E_", host='127.0.0.1', port="3306", database='vcdb')
+        user=user, password=pwd, host='127.0.0.1', port="3306", database='vcdb')
+    globals.connection1 = connection1
+    globals.vc_cursor = connection1.cursor()
     print("VCDB connected.")
 
-    globals.connection1 = mysql.connector.connect(
-        user="root", password="mypassword", host='127.0.0.1', port="3306", database='vcdb')
-    print("VCDB connected.")
-    globals.vc_cursor = globals.connection1.cursor()
-
-    globals.connection2 = mysql.connector.connect(
-        user="root", password="tubecity0212E_", host='127.0.0.1', port="3306", database='userdb')
+    connection2 = mysql.connector.connect(
+        user=user, password=pwd, host='127.0.0.1', port="3306", database='userdb')
+    globals.connection2 = connection2
+    globals.user_cursor = connection2.cursor()
     print("user DB connected.")
-    globals.user_cursor = globals.connection2.cursor()
 
-    globals.userid = "testtt"
+    # insert data for testing
+    query = "insert into user values (%s, %s, %s, %s, %s);"
+    values = ["test2", "aMember", "member.com", "testtt2", "func2"]
+    globals.vc_cursor.execute(query, values)
+    globals.connection2.commit()
+    globals.userid = "test2"
+
+    print(globals.connection1, globals.vc_cursor, globals.user_cursor)
+    return
 
 
-# import the function.py you want to test
-
-# write down tests
 init_connections()
-checkout("func2", False)
-# checkout("func3", False)
+
+# test functions
+checkout("func1", False)
+checkout("func3", False)
+checkout("func3", True)
