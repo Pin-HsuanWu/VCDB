@@ -334,11 +334,3 @@ def get_diff(commit1_sql, commit2_sql):
 
     # Generate sql diff script
     return generate_sql_diff(commit1_dict, commit2_dict)
-
-
-
-
-
-
-
-
