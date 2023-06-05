@@ -31,8 +31,7 @@ def create():
             time datetime not null,
             uid varchar(500) not null,
             msg varchar(500),
-            PRIMARY KEY (`version`), 
-        )'''
+            PRIMARY KEY (version));'''
         vc_cursor.execute(creating_table)
         connection1.commit()
 
@@ -47,8 +46,7 @@ def create():
             CONSTRAINT FK_UserCommit FOREIGN KEY (current_version)
             REFERENCES commit(version),
             CONSTRAINT FK_UserBranch FOREIGN KEY (current_bid)
-            REFERENCES branch(bid),
-        )'''
+            REFERENCES branch(bid));'''
         vc_cursor.execute(creating_table)
         connection1.commit()
 
@@ -63,8 +61,7 @@ def create():
             CONSTRAINT FK_MergeCommit2 FOREIGN KEY (main_branch_version)
             REFERENCES commit(version),
             CONSTRAINT FK_MergeCommit3 FOREIGN KEY (target_branch_version)
-            REFERENCES commit(version)
-        );'''
+            REFERENCES commit(version));'''
         vc_cursor.execute(creating_table)
         connection1.commit()
 
