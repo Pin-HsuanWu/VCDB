@@ -18,12 +18,12 @@ from . import diff
 def checkout(newBranchName, new=False):
     print("start checking out.")
     connection1 = mysql.connector.connect(
-        user="root", password="tubecity0212E_", host='127.0.0.1', port="3306", database='vcdb')
+        user="myuser", password="mypassword", host='127.0.0.1', port="3306", database='vcdb')
     print("VCDB connected.")
     vc_cursor = connection1.cursor()
 
     connection2 = mysql.connector.connect(
-    user="root", password="tubecity0212E_", host='127.0.0.1', port="3306", database='userdb')
+    user="myuser", password="mypassword", host='127.0.0.1', port="3306", database='userdb')
     print("user DB connected.")
     user_cursor = connection2.cursor()
 
