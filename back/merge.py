@@ -136,7 +136,6 @@ def merge(main_branch_name, target_branch_name, current_uid):
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
     vc_cursor.execute(query, (main_branch_name, ))
     main_branch_existed = vc_cursor.fetchall()
-    print(main_branch_existed)
     if not main_branch_existed:
         print(f"Branch {main_branch_name} does not exist.")
         return
@@ -180,19 +179,18 @@ def merge(main_branch_name, target_branch_name, current_uid):
         # Get branch info
         query = f"SELECT * FROM branch WHERE name = '{main_branch_name}'"
         vc_cursor.execute(query)
-        branchInfo = vc_cursor.fetchall()[0]
-        last_version = branchInfo[2]
-        branchID = branchInfo[0]
+        main_branch_info = vc_cursor.fetchall()[0]
+        last_version = main_branch_info[2]
+        main_branch_id = main_branch_info[0]
 
         # Insert into commit table
-        now = datetime.datetime.now()
-        insert = "INSERT INTO commit (version, branch, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        val = (merged_version, branchID, last_version, upgrade, downgrade, now.strftime("%Y-%m-%d %H:%M:%S"), current_uid, msg)
+        insert = "INSERT INTO commit (version, bid, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), current_uid, msg)
         vc_cursor.execute(insert, val)
 
         # Update branch table
         update = "UPDATE branch SET tail = %s WHERE bid = %s;"
-        val = (merged_version, branchID)
+        val = (merged_version, main_branch_id)
         vc_cursor.execute(update, val)
 
         # Insert into merge table
@@ -201,8 +199,8 @@ def merge(main_branch_name, target_branch_name, current_uid):
         vc_cursor.execute(insert, val)
 
         # Update user table
-        update = "UPDATE user SET current_version = %s, current_branch = %s WHERE uid = %s;"
-        val = (merged_version, main_branch_name, current_uid)
+        update = "UPDATE user SET current_version = %s, current_bid = %s WHERE uid = %s;"
+        val = (merged_version, main_branch_id, current_uid)
         vc_cursor.execute(update, val)
 
         vcdb_connection.commit()
