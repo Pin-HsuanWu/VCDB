@@ -1,79 +1,3 @@
-# from dotenv import load_dotenv
-# import os
-# import sqlalchemy as db
-# from sqlalchemy import create_engine
-# from sqlalchemy_utils import create_database, database_exists
-# from sqlalchemy import Table, Column, Integer, String, MetaData, inspect
-# import pymysql
-# pymysql.install_as_MySQLdb()
-# load_dotenv()
-
-
-# def create(user, pwd, host, port, database_name):
-#     # user = os.getenv('MYSQL_USER')
-#     # pwd = os.getenv('MYSQL_PASSWORD')
-#     # host = '127.0.0.1'
-#     # port = '3307'
-#     # dbname = os.getenv('MYSQL_DATABASE')
-#     conn_str = 'mysql://{user}:{pwd}@{host}:{port}/{dbname}?charset=utf8'.format(
-#         user=user,
-#         pwd=pwd,
-#         host=host,
-#         port=port,
-#         dbname=database_name
-#     )
-
-#     try:
-#         engine = create_engine(conn_str)
-#         if not database_exists(engine.url):
-#             create_database(engine.url)
-
-#         meta = MetaData()
-#         commit = Table(
-#             'commit', meta,
-#             Column('cid', Integer, primary_key=True),
-#             Column('version', String(25)),
-#             Column('last_version', String(125)),
-#             Column('upgrade', String(125)),
-#             Column('downgrade', String(125)),
-#             Column('msg', String(12)),
-#         )
-
-#         user = Table(
-#             'user', meta,
-#             Column('uid', String(125), primary_key=True),
-#             Column('name', String(125)),
-#             Column('email', String(125)),
-#             Column('current_version', String(25)),
-#             Column('current_branch', String(25))
-#         )
-
-#         merge = Table(
-#             'merge', meta,
-#             Column('mid', Integer, primary_key=True),
-#             Column('version', String(25)),
-#             Column('merge_from', String(25))
-#         )
-
-#         branch = Table(
-#             'branch', meta,
-#             Column('bid', Integer, primary_key=True),
-#             Column('name', String(25)),
-#             Column('head', String(25))
-#         )
-
-#         with engine.connect() as conn:
-#             meta.create_all(engine)
-
-
-#     except Exception as e:
-#         print(e)
-
-
-# if __name__ == '__main__':
-#     create()
-
-
 import mysql.connector
 from dotenv import load_dotenv
 import os
@@ -82,10 +6,10 @@ load_dotenv()
 def create(user, pwd, host, port):
     try:
         # connect to vcdb ip address 127.0.0.1 & port 3306 (currently using local, then switch to remote computer)
-        connection1 = mysql.connector.connect(
+        vc_connect = mysql.connector.connect(
             user=user, password=pwd, database="vcdb", host=host, port=port)
 
-        vc_cursor = connection1.cursor()
+        vc_cursor = vc_connect.cursor()
         # vc_cursor.execute("CREATE DATABASE vcdb;")
 
         # creating tables for vcdb: branch, commit, user, merge
@@ -95,7 +19,7 @@ def create(user, pwd, host, port):
             tail varchar(500),
             PRIMARY KEY (bid));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
 
         creating_table = '''CREATE TABLE commit(
@@ -109,7 +33,7 @@ def create(user, pwd, host, port):
             msg varchar(500),
             PRIMARY KEY (version));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
 
         creating_table = '''CREATE TABLE user(
@@ -124,7 +48,7 @@ def create(user, pwd, host, port):
             CONSTRAINT FK_UserBranch FOREIGN KEY (current_bid)
             REFERENCES branch(bid));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
 
         creating_table = '''CREATE TABLE merge(
@@ -139,7 +63,7 @@ def create(user, pwd, host, port):
             CONSTRAINT FK_MergeCommit3 FOREIGN KEY (target_branch_version)
             REFERENCES commit(version));'''
         vc_cursor.execute(creating_table)
-        connection1.commit()
+        vc_connect.commit()
 
         vc_cursor.execute('show tables;')
         vc_alltables = vc_cursor.fetchall()
