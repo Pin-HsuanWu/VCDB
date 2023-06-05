@@ -8,7 +8,7 @@ Example
 
 
 # Read SQL file
-def readSqlFile(filename):
+def read_sql_file(filename):
     # Open and read the file as a single buffer
     fd = open(filename, 'r')
     sqlFile = fd.read()
@@ -18,8 +18,8 @@ def readSqlFile(filename):
     sqlCommands = sqlFile.split(';')
 
     # Execute every command from the input file
-    for command in sqlCommands:
-        print(command)
+    # for command in sqlCommands:
+    #     print(command)
         
     return sqlFile
 
@@ -244,41 +244,6 @@ def check_unique_key_differences(table_name, attributes1, attributes2):
     return sql_script
 
 
-def generate_attribute_string(attributes):
-    constraint_keywords = {'PRIMARY KEY', 'CONSTRAINT_FOREIGN KEY', 'CONSTRAINT_CHECK', 'UNIQUE KEY'}
-    attribute_list = []
-
-    for name, definition in attributes.items():
-        if name not in constraint_keywords:
-            attribute_list.append(f"`{name}` {definition}")
-
-    attribute_str = ", \n".join(attribute_list)
-
-    if 'PRIMARY KEY' in attributes:
-        primary_key_columns = ", ".join([f"`{col}`" for col in attributes['PRIMARY KEY']])
-        attribute_str += f", \nPRIMARY KEY ({primary_key_columns})"
-
-    if 'UNIQUE KEY' in attributes:
-        unique_keys = attributes['UNIQUE KEY']
-        for constraint_name, unique_key in unique_keys.items():
-            columns = ", ".join([f"`{column}`" for column in unique_key])
-            attribute_str += f", \nUNIQUE KEY `{constraint_name}` ({columns})"
-
-    if 'CONSTRAINT_FOREIGN KEY' in attributes:
-        foreign_keys = attributes['CONSTRAINT_FOREIGN KEY']
-        for constraint_name, foreign_key in foreign_keys.items():
-            foreign_key_sql = generate_single_foreign_key_sql(constraint_name, foreign_key)
-            attribute_str += f", \n{foreign_key_sql}"
-
-    if 'CONSTRAINT_CHECK' in attributes:
-        check_keys = attributes['CONSTRAINT_CHECK']
-        for constraint_name, check_key in check_keys.items():
-            attribute_str += f", \nCONSTRAINT `{constraint_name}` CHECK {check_key}"
-
-    return attribute_str
-
-
-
 def generate_sql_diff(commit1_dict, commit2_dict):
     sql_script = ""
 
@@ -291,7 +256,34 @@ def generate_sql_diff(commit1_dict, commit2_dict):
         if table_name not in commit1_dict:
             # Table added in commit 2
             attributes2 = commit2_dict[table_name]
-            attribute_str = generate_attribute_string(attributes2)
+            attribute_list = []
+            for name, definition in attributes2.items():
+                if name not in constraint_keywords:
+                    attribute_list.append(f"{name} {definition}")
+
+            attribute_str = ", \n".join(attribute_list)
+
+            # Add PRIMARY KEY and CONSTRAINT_FOREIGN KEY separately if present
+            if 'PRIMARY KEY' in attributes2:
+                primary_key_columns = ", ".join(attributes2['PRIMARY KEY'])
+                attribute_str += f", \nPRIMARY KEY (`{primary_key_columns}`)"
+                
+            if 'UNIQUE KEY' in attributes2:
+                unique_keys = attributes2['UNIQUE KEY']
+                for constraint_name, unique_key in unique_keys.items():
+                    columns = ", ".join([f"`{column}`" for column in unique_key])
+                    attribute_str += f", \nUNIQUE KEY `{constraint_name}` ({columns})"
+
+            if 'CONSTRAINT_FOREIGN KEY' in attributes2:
+                foreign_keys = attributes2['CONSTRAINT_FOREIGN KEY']
+                for constraint_name, foreign_key in foreign_keys.items():
+                    foreign_key_sql = generate_single_foreign_key_sql(constraint_name, foreign_key)
+                    attribute_str += f", \n{foreign_key_sql}"
+                    
+            if 'CONSTRAINT_CHECK' in attributes2:
+                check_keys = attributes2['CONSTRAINT_CHECK']
+                for constraint_name, check_key in check_keys.items():
+                    attribute_str += f", \nCONSTRAINT `{constraint_name}` CHECK {check_key}"
 
             sql_script += f"CREATE TABLE `{table_name}` (\n{attribute_str});\n"
         elif table_name not in commit2_dict:
@@ -336,11 +328,3 @@ def get_diff(commit1, commit2):
     commit1_dict = parse_sql_script(commit1)
     commit2_dict = parse_sql_script(commit2)
     return generate_sql_diff(commit1_dict, commit2_dict)
-
-
-
-
-
-
-
-
