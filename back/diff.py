@@ -8,7 +8,7 @@ Example
 
 
 # Read SQL file
-def readSqlFile(filename):
+def read_sql_file(filename):
     # Open and read the file as a single buffer
     fd = open(filename, 'r')
     sqlFile = fd.read()

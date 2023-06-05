@@ -1,19 +1,17 @@
 # description
 # 1. new == False:
-    # update user table
-    # check if tail == current schema
-    # if not: warn, exit
-    # directly change userdb's schema: drop + create
+#     update user table
+#     check if tail == current schema
+#     if not: warn, exit
+#     directly change userdb's schema: drop + create
 # 2. new == True:
-    # update user table
-    # since creating new branch does not require a commit, we don't update branch table
+#     update user table
+#     since creating new branch does not require a commit, we don't update branch table
 
-
-# import packages
 import os
 import mysql.connector
-import dump
-import diff
+from . import dump
+from . import diff
 
 
 # function
@@ -50,8 +48,8 @@ def checkout(newBranchName, new=False):
             # dump current userdb's schema
             dump.dump(user_cursor)
             # check differences
-            userCurrentSchema = diff.readSqlFile(f"./tmpfile.sql")
-            currentBranchTail = diff.readSqlFile(f"./branch_tail_schema/{currentBranchName}.sql")
+            userCurrentSchema = diff.read_sql_file(f"./tmpfile.sql")
+            currentBranchTail = diff.read_sql_file(f"./branch_tail_schema/{currentBranchName}.sql")
             result = diff.get_diff(currentBranchTail, userCurrentSchema)
             if result != "":
                 print("Please commit before checking out to another branch.")
@@ -59,7 +57,7 @@ def checkout(newBranchName, new=False):
             # directly change userdb's schema: drop whole schema + import newBranch schema to it
             query = 'drop schema userdb;'
             user_cursor.execute(query)
-            targetBranchTailCommands = diff.readSqlFile(f"./branch_tail_schema/{newBranchName}.sql")
+            targetBranchTailCommands = diff.read_sql_file(f"./branch_tail_schema/{newBranchName}.sql")
             user_cursor.execute("create database userdb;")
             user_cursor.execute("use userdb;")
             for statement in targetBranchTailCommands.split(';'):
@@ -114,4 +112,4 @@ def checkout(newBranchName, new=False):
         print(e)
 
 
-checkout("func3", True)
+#checkout("func2", False)
