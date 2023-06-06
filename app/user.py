@@ -3,6 +3,7 @@ import mysql.connector
 import create
 import globals
 import sys
+import os
 
 def init(user, pwd, host, port, database_name):
     # set DB connection
@@ -35,7 +36,9 @@ def init(user, pwd, host, port, database_name):
     except:
     # except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print("============================================")
+        print("Error file name: ", fname)
         print("Error Type: ", exc_type)
         print("Error occurs in line:", exc_tb.tb_lineno)
         print("Error msg:", exc_obj)
@@ -65,7 +68,9 @@ def register(user_name, user_email):
         return
     except:
         exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print("============================================")
+        print("Error file name: ", fname)
         print("Error Type: ", exc_type)
         print("Error occurs in line:", exc_tb.tb_lineno)
         print("Error msg:", exc_obj)
@@ -107,10 +112,20 @@ def login(user, pwd, host,  database_name, user_name, user_email):
         globals.current_uid = current_uid
         globals.current_version = current_version
         globals.current_bid = current_bid
+        print(globals.current_uid, globals.current_bid)
         # db_cursor.execute(f"select bid from branch where name = '{user_name}' AND email = '{user_email}'")
 
         return 
 
-    except Exception as e:
-        print(e)
-        return None
+    # except Exception as e:
+    except:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print("============================================")
+        print("Error file name: ", fname)
+        print("Error Type: ", exc_type)
+        print("Error occurs in line:", exc_tb.tb_lineno)
+        print("Error msg:", exc_obj)
+        print("============================================")
+        # print(e)
+        # return None

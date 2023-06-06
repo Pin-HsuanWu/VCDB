@@ -39,13 +39,13 @@ def dump(cur):
     
     
     
-if __name__ == '__main__':
-    # Connect to db
-    connection = m.connect(host='localhost', user='root',password='secure1234', database='db_class')
-    cur = connection.cursor(buffered=True)
+# if __name__ == '__main__':
+#     # Connect to db
+#     connection = m.connect(host='localhost', user='root',password='secure1234', database='db_class')
+#     cur = connection.cursor(buffered=True)
     
-    dump(cur)
+#     dump(cur)
     
-    # Close connection
-    cur.close()
-    connection.close()
+#     # Close connection
+#     cur.close()
+#     connection.close()

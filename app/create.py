@@ -43,8 +43,6 @@ def create(user, pwd, host, port):
             current_version varchar(500),
             current_bid int not null,
             PRIMARY KEY (uid),
-            CONSTRAINT FK_UserCommit FOREIGN KEY (current_version)
-            REFERENCES commit(version),
             CONSTRAINT FK_UserBranch FOREIGN KEY (current_bid)
             REFERENCES branch(bid));'''
         vc_cursor.execute(creating_table)

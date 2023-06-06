@@ -6,6 +6,7 @@ import commit
 import merge
 import globals
 import checkout
+import hop
 
 # Global variables
 # database_name = 'vcdb'
@@ -53,8 +54,11 @@ class MyApp(tk.Tk):
         command_menu.add_command(
             label="checkout", command=lambda: self.show_frame(CheckoutPage)
         )
+        command_menu.add_command(
+            label="hop", command=lambda: self.show_frame(HopPage)
+        )
 
-        for F in (StartPage, InitPage, RegisterPage, LoginPage, CommitPage, MergePage, CheckoutPage):
+        for F in (StartPage, InitPage, RegisterPage, LoginPage, CommitPage, MergePage, CheckoutPage, HopPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -64,6 +68,7 @@ class MyApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -129,10 +134,11 @@ class InitPage(tk.Frame):
         user.init(
             db_user, pwd, host, port, user_db
         )
-        #print("vc_connect: ",vc_connect, "vc_cursor: ", vc_cursor, "user_connect: ", user_connect, "user_cursor: ",user_cursor)
+        # print("vc_connect: ",vc_connect, "vc_cursor: ", vc_cursor, "user_connect: ", user_connect, "user_cursor: ",user_cursor)
         print("======================================")
         print("check global variables: user_connect, user_cursor, user_host, userdb_name, user_name, vc_connect, vc_cursor, ")
-        print(globals.user_connect, globals.user_cursor, globals.user_host, globals.userdb_name, globals.user_name,globals.vc_connect, globals.vc_cursor)
+        print(globals.user_connect, globals.user_cursor, globals.user_host,
+              globals.userdb_name, globals.user_name, globals.vc_connect, globals.vc_cursor)
         print("======================================")
         messagebox.showinfo('Init', 'Database initialized successfully.')
 
@@ -173,8 +179,10 @@ class RegisterPage(tk.Frame):
         user.register(name, email)
 
         if globals.vc_connect is None:
-            print("Error: Database connection is not initialized. Run 'init' command first.")
-            messagebox.showinfo('Register', "Error: Database connection is not initialized. Run 'init' command first.")
+            print(
+                "Error: Database connection is not initialized. Run 'init' command first.")
+            messagebox.showinfo(
+                'Register', "Error: Database connection is not initialized. Run 'init' command first.")
         else:
             print("======================================")
             print("check global variables: current_bid")
@@ -221,7 +229,7 @@ class LoginPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:')
         pwd_label.grid(row=4, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var)
-        pwd_entry.insert(0, 'secure1234')
+        pwd_entry.insert(0, 'tubecity0212E_')
         pwd_entry.grid(row=4, column=1)
 
         host_label = tk.Label(self, text='Host:')
@@ -240,17 +248,19 @@ class LoginPage(tk.Frame):
             self,
             text='Parse',
             command=lambda: self.login_user(
-                user_var.get(), pwd_var.get(), host_var.get(), userDB_var.get(),name_var.get(), email_var.get()
+                user_var.get(), pwd_var.get(), host_var.get(
+                ), userDB_var.get(), name_var.get(), email_var.get()
             ),
         )
         parse_button.grid(row=7, column=0, columnspan=2, pady=10)
 
-    def login_user(self, user_db, pwd, host, user_db_name,name, email):
+    def login_user(self, user_db, pwd, host, user_db_name, name, email):
         try:
             user.login(user_db, pwd, host, user_db_name, name, email)
             print("======================================")
             print("check global variables: user_connect, user_cursor, user_host, userdb_name, user_name, vc_connect, vc_cursor, ")
-            print(globals.user_connect, globals.user_cursor, globals.user_host, globals.userdb_name, globals.user_name,globals.vc_connect, globals.vc_cursor)
+            print(globals.user_connect, globals.user_cursor, globals.user_host,
+                  globals.userdb_name, globals.user_name, globals.vc_connect, globals.vc_cursor)
             print("======================================")
             messagebox.showinfo('Login', "Login successfully.")
             self.controller.show_frame(CommitPage)
@@ -305,6 +315,7 @@ class LoginPage(tk.Frame):
 #             print(e)
 #             messagebox.showinfo('Login', e)
 
+
 class CommitPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -333,15 +344,15 @@ class CommitPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def commit_user(self, msg):
-        global vc_connect, user_cursor, vc_cursor, current_uid, current_bid
-
         try:
-            print(vc_connect, user_cursor, vc_cursor, current_uid, current_bid)
-            commit.commit(vc_connect, user_cursor, vc_cursor, current_uid, current_bid, msg)
+            print(globals.vc_connect, globals.user_cursor,
+                  globals.vc_cursor, globals.current_uid, globals.current_bid)
+            commit.commit(msg)
             messagebox.showinfo('Commit', "Commit successfully.")
         except Exception as e:
             print(e)
             messagebox.showinfo('Commit', e)
+
 
 class MergePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -355,6 +366,7 @@ class MergePage(tk.Frame):
 
         merge_main_var = tk.StringVar()
         merge_target_var = tk.StringVar()
+        conflict_var = tk.StringVar()
 
         merge_target_label = tk.Label(self, text='Merge Branch from')
         merge_target_label.grid(row=1, column=0, sticky='e')
@@ -366,37 +378,55 @@ class MergePage(tk.Frame):
         merge_main_entry = tk.Entry(self, textvariable=merge_main_var)
         # merge_main_entry.insert(0, str(merge.getBranchName(current_bid)))
         merge_main_entry.grid(row=2, column=1)
-        
+
         merge_main_label = tk.Label(self, text='Merge Conflict:')
         merge_main_label.grid(row=3, column=0, sticky='e')
-        self.result_text = tk.Text(self, height=5, width=30)
+        self.result_text = tk.Text(self, height=30, width=50)
         self.result_text.grid(row=4, column=0, columnspan=2, pady=10)
 
-        parse_button = tk.Button(
+        merge_button = tk.Button(
             self,
             text='merge',
             command=lambda: self.merge_GUI(
                 merge_main_var.get(), merge_target_var.get()
             ),
         )
-        parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+        merge_button.grid(row=5, column=0, columnspan=2, pady=10)
 
+        conflict_button = tk.Button(
+            self,
+            text='solve conflict',
+            command=lambda: self.merge_GUI(
+                merge_main_var.get(), merge_target_var.get()
+            ),
+        )
+        conflict_button.grid(row=5, column=2, columnspan=5, pady=10)
 
     def merge_GUI(self, main_bname, target_bname):
         try:
-            conflict_msg = merge.merge(vc_connect, vc_cursor, main_bname, target_bname)
+            conflict_msg = merge.merge(main_bname, target_bname)
             self.result_text.delete(1.0, tk.END)  # Clear previous content
-            self.result_text.insert(tk.END, conflict_msg)  # Update with the return value
+            # Update with the return value
+            self.result_text.insert(tk.END, conflict_msg)
             print(main_bname, target_bname)
-        
+
         except Exception as e:
             print(e)
             messagebox.showinfo('Merge', e)
 
-    def update_merge_main_entry(self, value):
+    def after_merge_GUI(self, main_bname, target_bname, fixed_sql_script):
+        try:
+            merge.merge_after_conflict_fixed(
+                main_bname, target_bname, fixed_sql_script)
+
+        except Exception as e:
+            print(e)
+            messagebox.showinfo('Merge', e)
+
+    def update_merge_main_entry(self, value, conflict_var):
+        self.merge_main_entry = tk.Entry(self, textvariable=conflict_var)
         self.merge_main_entry.delete(0, tk.END)  # Clear previous content
         self.merge_main_entry.insert(0, value)
-
 
 
 class CheckoutPage(tk.Frame):
@@ -430,15 +460,41 @@ class CheckoutPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def app_checkout(self, newBranchName, isNewBranchOrNot):
-        global vc_connect, vc_cursor, user_connect, user_cursor
         return_msg = checkout.checkout(
             newBranchName, isNewBranchOrNot
         )
-        messagebox.showinfo('Checkout Result:', 'Database initialized successfully.')
+        messagebox.showinfo('Checkout Result:', f"{return_msg}")
+
+
+class HopPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        label = tk.Label(self, text="Hop")
+        label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+
+        destination = tk.StringVar()
+
+        destination_label = tk.Label(self, text='destination:')
+        destination_label.grid(row=1, column=0, sticky='e')
+        destination_entry = tk.Entry(self, textvariable=destination)
+        destination_entry.grid(row=1, column=1)
+
+        parse_button = tk.Button(
+            self,
+            text='Hop',
+            command=lambda: self.app_checkout(
+                destination.get()
+            ),
+        )
+        parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+
+    def app_checkout(self, destination):
+        return_msg = hop.hop(destination)
+        messagebox.showinfo('Hop Result:', f"{return_msg}")
 
 
 app = MyApp()
 app.geometry("800x600")
 app.mainloop()
-
-
