@@ -180,9 +180,9 @@ if __name__ == '__main__':
     vc_cur = vc_connection.cursor(buffered=True)
     
     # test data
-    userID = '2'
-    branchID = '2'
-    msg = '1st commit'
+    userID = '1'
+    branchID = '1'
+    msg = '2nd commit'
 
     commit(vc_connection, user_cur, vc_cur, userID, branchID, msg)
     
