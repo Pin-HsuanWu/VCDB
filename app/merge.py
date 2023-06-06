@@ -114,8 +114,9 @@ def merge_schema(commit1_dict, commit2_dict):
 
 
 
-def merge(main_branch_name, target_branch_name):
+def merge(vc_connect, vc_cursor, main_branch_name, target_branch_name):
     
+    print(main_branch_name, target_branch_name)
     # Check if 2 branches exist
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
     vc_cursor.execute(query, (main_branch_name, ))
@@ -190,7 +191,20 @@ def merge(main_branch_name, target_branch_name):
         vc_connect.commit()
 
         print(f"Successfully merged {target_branch_name} into {main_branch_name}!")
-    return msg
+    return 
     
+# get bid from branch name
+def getBid(vc_cursor, branch_name):
 
+    query = "SELECT bid FROM branch WHERE name = (%s);"
+    vc_cursor.execute(query, (branch_name, ))
+    branch_id = vc_cursor.fetchall()[0]
+    
+    return branch_id
 
+def getBranchName(vc_cursor, bid):
+    query = "SELECT name FROM branch WHERE bid = (%s);"
+    vc_cursor.execute(query, (bid, ))
+    branch_name = vc_cursor.fetchall()[0]
+    
+    return branch_name
