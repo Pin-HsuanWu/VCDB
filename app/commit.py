@@ -12,13 +12,11 @@ def commit(msg):  # use globals
     query = "SELECT * FROM user WHERE uid = '%s';" % globals.current_uid
     globals.vc_cursor.execute(query)
     userInfo = globals.vc_cursor.fetchone()
-    # print("userInfo: ", userInfo)
     
     # get 目前 branch 的相關資訊
     query = "SELECT * FROM branch WHERE bid = '%s'" % globals.current_bid
     globals.vc_cursor.execute(query)
     branchInfo = globals.vc_cursor.fetchone()
-    # print("branchInfo: ", branchInfo)
     
     # check if user can commit or not
     if (userInfo[3] != None):  # user 有 commit 過
@@ -86,6 +84,8 @@ def commit(msg):  # use globals
     
     print("Successfully commit")
     globals.vc_connect.commit()
+
+    return version
     
 if __name__ == '__main__':
     msg = "commit"
