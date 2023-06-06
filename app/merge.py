@@ -115,6 +115,8 @@ def merge_schema(commit1_dict, commit2_dict):
 
 # Merge two branches by merged_schema_dict and main_schema_dict
 def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict):
+    is_merged = False
+    
     # Merged schema
     downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
     upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
@@ -127,7 +129,7 @@ def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_d
     globals.vc_cursor.execute(query)
     main_branch_info = globals.vc_cursor.fetchall()[0]
     if not main_branch_info:
-        return "No such branch with this tail version!"
+        return is_merged, "No such branch with this tail version!"
     last_version = main_branch_info[2]
     main_branch_id = main_branch_info[0]
     msg = f"Merge {target_tail_version} into {main_tail_version}"
@@ -154,7 +156,8 @@ def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_d
 
     globals.vc_connect.commit()
     print(f"Successfully merged {target_tail_version} into {main_tail_version}!")
-    return
+    is_merged = True
+    return is_merged, f"Successfully merged {target_tail_version} into {main_tail_version}!"
     
 
 def get_branch_tail_version(branch_name):
@@ -172,14 +175,16 @@ Y: Branches merged
 N: Return conflict sql script
 """
 def merge(main_branch_name, target_branch_name):
+    is_merged = False
+
     # Check if 2 branches exist
     main_tail_version = get_branch_tail_version(main_branch_name)
     if main_tail_version is None:
-        return f"Branch {main_branch_name} does not exist."
+        return is_merged, f"Branch {main_branch_name} does not exist."
     
     target_tail_version = get_branch_tail_version(target_branch_name)
     if target_tail_version is None:
-        return f"Branch {target_branch_name} does not exist."
+        return is_merged, f"Branch {target_branch_name} does not exist."
 
     # Read main branch tail and target branch tail sql file
     main_branch_path = f"./branch_tail_schema/{main_branch_name}.sql"
@@ -197,12 +202,12 @@ def merge(main_branch_name, target_branch_name):
         print("Schema conflict exists between 2 branches as follows:")
         conflict_sql_script = is_conflict[1]
         print(conflict_sql_script)
-        return conflict_sql_script
+        return is_merged, conflict_sql_script
     # if there is no conflict: merge 2 branches
     else:
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
-        merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
-        return
+        result = merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
+        return result
 
 
 def sql_script_into_list(sql_script):
@@ -216,6 +221,7 @@ def sql_script_into_list(sql_script):
 Merge 2 branches after conflict fixed
 """
 def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
+    is_merged = False
     try:
         # Drop all tables
         globals.user_cursor.execute("SHOW Tables") 
@@ -232,7 +238,7 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
                 globals.user_connect.commit()
     except Exception as e:
         print(f"Error: {e}")
-        return f"Error: {e}"
+        return is_merged, f"Error: {e}"
 
     # Parse fixed sql script into dictionary
     merged_schema_dict = parse_sql_script(fixed_sql_script)
@@ -240,8 +246,8 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
     target_tail_version = get_branch_tail_version(target_branch_name)
     main_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
     main_schema_dict = parse_sql_script(main_schema)
-    merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
-    return
+    result = merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
+    return result
 
 # TEST
 # if __name__ == '__main__':
