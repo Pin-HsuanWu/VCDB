@@ -134,6 +134,9 @@ def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_d
     main_branch_id = main_branch_info[0]
     msg = f"Merge {target_tail_version} into {main_tail_version}"
 
+
+    #### 只留merge table 其他call commit->要拿最新版
+
     # Insert into commit table
     insert = "INSERT INTO commit (version, bid, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), globals.current_uid, msg)
