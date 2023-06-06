@@ -114,9 +114,30 @@ def merge_schema(commit1_dict, commit2_dict):
 
 
 # Merge two branches by merged_schema_dict and main_schema_dict
-def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict):
+def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict):
     is_merged = False
-    
+    # Turn merged schema into sql script
+    merged_sql_script = generate_sql_diff({}, merged_schema_dict)
+
+    # Update userdb
+    update_result = update_userdb_schema(merged_sql_script)
+
+    # Successfully update userdb
+    if update_result[0]:
+        msg = f"Merge {target_branch_name} into {main_branch_name}"
+        # Call commit(msg) and get version number
+
+        # Insert into merge table
+        insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
+        val = (merged_version, main_tail_version, target_tail_version)
+        globals.vc_cursor.execute(insert, val)
+        return update_result[0], msg
+    # Failed to update userdb
+    else:
+        return update_result
+
+
+    """
     # Merged schema
     downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
     upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
@@ -158,6 +179,7 @@ def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_d
     globals.vc_cursor.execute(update, val)
 
     globals.vc_connect.commit()
+    """
     print(f"Successfully merged {target_tail_version} into {main_tail_version}!")
     is_merged = True
     return is_merged, f"Successfully merged {target_tail_version} into {main_tail_version}!"
@@ -209,7 +231,7 @@ def merge(main_branch_name, target_branch_name):
     # if there is no conflict: merge 2 branches
     else:
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
-        result = merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
+        result = merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict)
         return result
 
 
@@ -220,11 +242,7 @@ def sql_script_into_list(sql_script):
         sql_script_list[i] = sql_script_list[i]+";"
     return sql_script_list
 
-"""
-Merge 2 branches after conflict fixed
-"""
-def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
-    is_merged = False
+def update_userdb_schema(sql_script):
     try:
         # Drop all tables
         globals.user_cursor.execute("SHOW Tables") 
@@ -234,23 +252,37 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
         globals.user_connect.commit()
         
         # Execute fixed sql script
-        fixed_sql_script_list = sql_script_into_list(fixed_sql_script)
+        fixed_sql_script_list = sql_script_into_list(sql_script)
         for script in fixed_sql_script_list:
             if script:
                 globals.user_cursor.execute(script)
                 globals.user_connect.commit()
+        return True, "Successfully updated userdb schema!"
     except Exception as e:
         print(f"Error: {e}")
-        return is_merged, f"Error: {e}"
+        return False, f"Error: {e}"
 
-    # Parse fixed sql script into dictionary
-    merged_schema_dict = parse_sql_script(fixed_sql_script)
-    main_tail_version = get_branch_tail_version(main_branch_name)
-    target_tail_version = get_branch_tail_version(target_branch_name)
-    main_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
-    main_schema_dict = parse_sql_script(main_schema)
-    result = merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
-    return result
+"""
+Merge 2 branches after conflict fixed
+"""
+def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
+    update_result = update_userdb_schema(fixed_sql_script)
+
+    # successfully update userdb schema, return success message
+    if update_result[0]:
+        print(update_result[1])
+        # Call commit()
+        """
+        # Parse fixed sql script into dictionary
+        # merged_schema_dict = parse_sql_script(fixed_sql_script)
+        # main_tail_version = get_branch_tail_version(main_branch_name)
+        # target_tail_version = get_branch_tail_version(target_branch_name)
+        # main_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
+        # main_schema_dict = parse_sql_script(main_schema)
+        # result = merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
+        """
+    # else failed to update userdb schema, return error message
+    return update_result
 
 # TEST
 # if __name__ == '__main__':
