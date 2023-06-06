@@ -3,7 +3,7 @@ import mysql.connector
 import uuid
 import datetime
 import time
-from globals import *
+import globals
 
 
 # Add branch format for sql script in different branch
@@ -59,6 +59,7 @@ def check_table_conflicts(is_conflict, table_name, branch1_name, table1, branch2
         attribute_str = generate_attribute_string(nonconflict_attr_dict) +',\n'+ attribute_str
     else:
         attribute_str = generate_attribute_string(nonconflict_attr_dict)
+    # sql_script += f"DROP TABLE IF EXISTS `{table_name}`;\n"
     sql_script += f"CREATE TABLE `{table_name}` (\n{attribute_str});\n"
     return is_conflict, sql_script
 
@@ -113,7 +114,7 @@ def merge_schema(commit1_dict, commit2_dict):
 
 
 # Merge two branches by merged_schema_dict and main_schema_dict
-def merge_by_dict(main_schema_version, target_schema_version, merged_schema_dict, main_schema_dict):
+def merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict):
     # Merged schema
     downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
     upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
@@ -122,42 +123,44 @@ def merge_by_dict(main_schema_version, target_schema_version, merged_schema_dict
     merged_version = str(uuid.uuid4())[:8]
 
     # Get branch info
-    query = f"SELECT * FROM branch WHERE bid = '{main_schema_version}'"
-    vc_cursor.execute(query)
-    main_branch_info = vc_cursor.fetchall()[0]
+    query = f"SELECT * FROM branch WHERE tail = '{main_tail_version}'"
+    globals.vc_cursor.execute(query)
+    main_branch_info = globals.vc_cursor.fetchall()[0]
+    if not main_branch_info:
+        return "No such branch with this tail version!"
     last_version = main_branch_info[2]
     main_branch_id = main_branch_info[0]
+    msg = f"Merge {target_tail_version} into {main_tail_version}"
 
     # Insert into commit table
     insert = "INSERT INTO commit (version, bid, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), current_uid, msg)
-    vc_cursor.execute(insert, val)
+    val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), globals.current_uid, msg)
+    globals.vc_cursor.execute(insert, val)
 
     # Update branch table
     update = "UPDATE branch SET tail = %s WHERE bid = %s;"
     val = (merged_version, main_branch_id)
-    vc_cursor.execute(update, val)
+    globals.vc_cursor.execute(update, val)
 
     # Insert into merge table
-    insert = "INSERT INTO merge (merged_version, main_schema_version, target_schema_version) VALUES (%s, %s, %s)"
-    val = (merged_version, main_schema_version, target_schema_version)
-    vc_cursor.execute(insert, val)
+    insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
+    val = (merged_version, main_tail_version, target_tail_version)
+    globals.vc_cursor.execute(insert, val)
 
     # Update user table
     update = "UPDATE user SET current_version = %s, current_bid = %s WHERE uid = %s;"
-    val = (merged_version, main_branch_id, current_uid)
-    vc_cursor.execute(update, val)
+    val = (merged_version, main_branch_id, globals.current_uid)
+    globals.vc_cursor.execute(update, val)
 
-    vc_connect.commit()
-    msg = f"Successfully merged {target_schema_version} into {main_schema_version}!"
-    print(msg)
-    return msg
+    globals.vc_connect.commit()
+    print(f"Successfully merged {target_tail_version} into {main_tail_version}!")
+    return
     
 
 def get_branch_tail_version(branch_name):
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
-    vc_cursor.execute(query, (branch_name, ))
-    branch_existed = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query, (branch_name, ))
+    branch_existed = globals.vc_cursor.fetchall()
     if not branch_existed:
         return None
     else:
@@ -198,18 +201,37 @@ def merge(main_branch_name, target_branch_name):
     # if there is no conflict: merge 2 branches
     else:
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
-        merge_by_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
+        merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
         return
+
+
+def sql_script_into_list(sql_script):
+    sql_script_list = sql_script.split(";")
+    sql_script_list.pop()
+    for i in range(len(sql_script_list)):
+        sql_script_list[i] = sql_script_list[i]+";"
+    return sql_script_list
 
 """
 Merge 2 branches after conflict fixed
 """
 def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
     try:
-        drop_all_table = "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-        user_cursor.execute(drop_all_table)
-        user_cursor.execute(fixed_sql_script)
+        # Drop all tables
+        globals.user_cursor.execute("SHOW Tables") 
+        existed_tables = globals.user_cursor.fetchall()
+        for table in existed_tables:
+            globals.user_cursor.execute(f"DROP TABLE {table[0]}")
+        globals.user_connect.commit()
+        
+        # Execute fixed sql script
+        fixed_sql_script_list = sql_script_into_list(fixed_sql_script)
+        for script in fixed_sql_script_list:
+            if script:
+                globals.user_cursor.execute(script)
+                globals.user_connect.commit()
     except Exception as e:
+        print(f"Error: {e}")
         return f"Error: {e}"
 
     # Parse fixed sql script into dictionary
@@ -218,5 +240,25 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
     target_tail_version = get_branch_tail_version(target_branch_name)
     main_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
     main_schema_dict = parse_sql_script(main_schema)
-    merge_by_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
+    merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
     return
+
+# TEST
+# if __name__ == '__main__':
+#     # merge('branch1', 'branch2')
+#     fixed_sql_script = """
+# CREATE TABLE `teacher` (
+# `Name` varchar(10) NOT NULL, 
+# `Gender` varchar(20) NOT NULL, 
+# `Department` varchar(20) NOT NULL, 
+# `Id` varchar(20) NOT NULL, 
+# PRIMARY KEY (`Id`));
+# CREATE TABLE `student` (
+# `Name` varchar(20) NOT NULL, 
+# `Department` varchar(20) NOT NULL, 
+# `Grade` int(11) NOT NULL, 
+# `Id` varchar(20) NOT NULL, 
+# `Gender` varchar(20) NOT NULL, 
+# PRIMARY KEY (`Id`));
+# """
+#     merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script)
