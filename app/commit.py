@@ -37,7 +37,7 @@ def commit(msg):  # use globals
     # dump
     path = "./branch_tail_schema"
     newSQL = dump(globals.user_cursor)  # return file name
-    oldSQL = str(globals.current_bid) + '_dump.sql'  # exist bid_dump.sql if the branch has been commited before
+    oldSQL = 'branch' + str(globals.current_bid) + '.sql'  # exist branch+bid.sql if the branch has been commited before
     
     # diff
     if (branchInfo[2] != None):  # 該 branch 有紀錄
@@ -120,7 +120,7 @@ def commit(vc_connection, user_cur, vc_cur, userID, branchID, msg):  # not use g
     # dump
     path = "./branch_tail_schema"
     newSQL = dump(user_cur)  # return file name
-    oldSQL = str(branchID) + '_dump.sql'  # exist bid_dump.sql if the branch has been commited before
+    oldSQL = 'branch' + str(branchID) + '.sql'  # exist branch+bid.sql if the branch has been commited before
     
     # diff
     if (branchInfo[2] != None):  # 該 branch 有紀錄
@@ -180,8 +180,8 @@ if __name__ == '__main__':
     vc_cur = vc_connection.cursor(buffered=True)
     
     # test data
-    userID = '1'
-    branchID = '1'
+    userID = '2'
+    branchID = '2'
     msg = '1st commit'
 
     commit(vc_connection, user_cur, vc_cur, userID, branchID, msg)
