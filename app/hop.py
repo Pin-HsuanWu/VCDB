@@ -1,5 +1,5 @@
 import mysql.connector as m
-import datetime
+
 
 def hop(user_connection, vc_connection, user_cur, vc_cur, userID, destination):
     
@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
     # test data
     userID = '1'
-    destination = '1aed152a'
+    destination = '8f3954ea'
     
     hop(user_connection, vc_connection, user_cur, vc_cur, userID, destination)
     
