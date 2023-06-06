@@ -1,24 +1,22 @@
 # first we declare that we will need these global vars in all other files
 def globalvar_initiation():
     global userdb_name
-    global userid
     global db_connect
     global db_cursor
+    global current_uid  # userid -> current_uid
     global current_version
-    global current_branch
+    global current_bid  # current_branch -> current_bid
     global vc_connect
     global user_connect
     global vc_cursor
     global user_cursor
-    global current_uid
     global database_name
 
-    userid = None
     userdb_name = None
     db_connect = None
     db_cursor = None
     current_version = None
-    current_branch = None
+    current_bid = None
     vc_connect = None
     user_connect = None
     vc_cursor = None
