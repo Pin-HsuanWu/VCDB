@@ -31,7 +31,7 @@ def hop(user_cur, vc_cur, userID, destination):
         relay = str(originInfo[2])
         relayBranch = str(userInfo[1])
         
-        while (relay != ""):
+        while (relay != None):
             # 找出下個要去的點
             query = "SELECT * FROM commit WHERE version = relay"
             vc_cur.execute(query)
@@ -52,7 +52,7 @@ def hop(user_cur, vc_cur, userID, destination):
         relay = origin
         relayBranch = str(userInfo[1])
     
-        while (relay != ""):
+        while (relay != None):
             # 找出下個要去的點
             query = "SELECT * FROM commit WHERE last_version = relay"
             vc_cur.execute(query)
