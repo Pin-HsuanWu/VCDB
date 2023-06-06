@@ -3,14 +3,14 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-def create():
+def create(user, pwd, host, port):
     try:
         # connect to vcdb ip address 127.0.0.1 & port 3306 (currently using local, then switch to remote computer)
         vc_connect = mysql.connector.connect(
-            user="myuser", password="mypassword", host='127.0.0.1', port="3306")  
+            user=user, password=pwd, database="vcdb", host=host, port=port)
 
         vc_cursor = vc_connect.cursor()
-        vc_cursor.execute("CREATE DATABASE vcdb;")
+        # vc_cursor.execute("CREATE DATABASE vcdb;")
 
         # creating tables for vcdb: branch, commit, user, merge
         creating_table = '''CREATE TABLE branch(
