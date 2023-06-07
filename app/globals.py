@@ -24,7 +24,7 @@ def globalvar_initiation():
     # vc_cursor = None
     # user_cursor = None
     # current_uid = None
-
+    current_bid = 'branch1'
     vc_connect = mysql.connector.connect(
         user="root", password="dbcourse", host='127.0.0.1', port="3306", database='vcdb')
     print("VCDB connected.")

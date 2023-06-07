@@ -4,6 +4,7 @@ import uuid
 import datetime
 import time
 import globals
+from commit import commit
 
 
 # Add branch format for sql script in different branch
@@ -112,6 +113,12 @@ def merge_schema(commit1_dict, commit2_dict):
 
     return merged_schema
 
+def insert_into_merge_table(merged_version, main_tail_version, target_tail_version):
+    insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
+    val = (merged_version, main_tail_version, target_tail_version)
+    globals.vc_cursor.execute(insert, val)
+    globals.vc_connect.commit()
+    return 
 
 # Merge two branches by merged_schema_dict and main_schema_dict
 def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict):
@@ -124,13 +131,11 @@ def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name
 
     # Successfully update userdb
     if update_result[0]:
-        msg = f"Merge {target_branch_name} into {main_branch_name}"
         # Call commit(msg) and get version number
-
+        msg = f"Merge {target_branch_name} into {main_branch_name}"
+        merged_version = commit(msg)
         # Insert into merge table
-        insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
-        val = (merged_version, main_tail_version, target_tail_version)
-        globals.vc_cursor.execute(insert, val)
+        insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
         return update_result[0], msg
     # Failed to update userdb
     else:
@@ -196,7 +201,7 @@ def get_branch_tail_version(branch_name):
 
 """
 Check if 2 branches can be merged
-Y: Branches merged
+Y: Branches merged  -> error???
 N: Return conflict sql script
 """
 def merge(main_branch_name, target_branch_name):
@@ -232,6 +237,7 @@ def merge(main_branch_name, target_branch_name):
     else:
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
         result = merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict)
+        #TODO!!! 可能因為fk table順序問題造成error 該如何處理？？
         return result
 
 
@@ -266,27 +272,37 @@ def update_userdb_schema(sql_script):
 Merge 2 branches after conflict fixed
 """
 def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
+    is_merged = False
+
+    # Check if 2 branches exist
+    main_tail_version = get_branch_tail_version(main_branch_name)
+    if main_tail_version is None:
+        return is_merged, f"Branch {main_branch_name} does not exist." 
+    target_tail_version = get_branch_tail_version(target_branch_name)
+    if target_tail_version is None:
+        return is_merged, f"Branch {target_branch_name} does not exist."
+
+    # Execute fixed sql script
     update_result = update_userdb_schema(fixed_sql_script)
 
-    # successfully update userdb schema, return success message
+    # Successfully update userdb schema, return success message
     if update_result[0]:
         print(update_result[1])
         # Call commit()
-        """
-        # Parse fixed sql script into dictionary
-        # merged_schema_dict = parse_sql_script(fixed_sql_script)
-        # main_tail_version = get_branch_tail_version(main_branch_name)
-        # target_tail_version = get_branch_tail_version(target_branch_name)
-        # main_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
-        # main_schema_dict = parse_sql_script(main_schema)
-        # result = merge_by_merged_dict(main_tail_version, target_tail_version, merged_schema_dict, main_schema_dict)
-        """
+        msg = f"Merge {target_branch_name} into {main_branch_name} after conflict fixed"
+        merged_version = commit(msg)
+
+        # Insert merge info into merge table
+        insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
+        is_merged = True
+        return is_merged, msg
     # else failed to update userdb schema, return error message
-    return update_result
+    else:
+        return is_merged, update_result[1]
 
 # TEST
-# if __name__ == '__main__':
-#     # merge('branch1', 'branch2')
+if __name__ == '__main__':
+    merge('branch1', 'branch2')
 #     fixed_sql_script = """
 # CREATE TABLE `teacher` (
 # `Name` varchar(10) NOT NULL, 
