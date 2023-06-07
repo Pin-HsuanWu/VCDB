@@ -18,12 +18,3 @@ CREATE TABLE `teacher` (
   PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
-
-CREATE TABLE `test2` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `Grade` int NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-
