@@ -41,10 +41,10 @@ def checkout(newBranchName, new=False):
 
             # check if tail == current schema
             # dump current userdb's schema
-            dump.dump(globals.user_cursor)
+            dumped_tmp_fileName = dump.dump(user_cursor)
             # check differences
-            userCurrentSchema = diff.read_sql_file(f"./tmpfile.sql")
-            currentBranchTail = diff.read_sql_file(f"../branch_tail_schema/{currentBranchName}.sql")
+            userCurrentSchema = diff.read_sql_file(f"./{dumped_tmp_fileName}.sql")
+            currentBranchTail = diff.read_sql_file(f"./branch_tail_schema/{currentBranchName}.sql")
             result = diff.get_diff(currentBranchTail, userCurrentSchema)
             if result != "":
                 print("Please commit before checking out to another branch.")

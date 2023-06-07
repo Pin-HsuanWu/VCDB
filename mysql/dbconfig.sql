@@ -45,8 +45,6 @@ CREATE TABLE `merge`(
     PRIMARY KEY (`mid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
-
-
 CREATE TABLE `user`(
     `uid` varchar(500) not null,
     `name` varchar(125) not null,
@@ -61,5 +59,3 @@ insert into user values ("testtt1", "elaine", "elaine.com", "", "main");
 insert into user values ("testtt2", "calista", "calista.com", "", "main");
 insert into user values ("testtt3", "leo", "leo.com", "", "main");
 insert into user values ("testtt4", "yuu", "yuu.com", "", "main");
-
-use userdb;

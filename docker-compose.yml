@@ -23,6 +23,3 @@ services:
     depends_on:
       - mysql
 
-# docker用python建db (vcdb), 連userdb
-# 連遠端的vcdb
-
