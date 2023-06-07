@@ -134,9 +134,12 @@ def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name
         # Call commit(msg) and get version number
         msg = f"Merge {target_branch_name} into {main_branch_name}"
         merged_version = commit(msg)
-        # Insert into merge table
-        insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
-        return update_result[0], msg
+        if merged_version:
+            # Insert into merge table
+            insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
+            return update_result[0], msg
+        else:
+            return False, "Failed to commit!"
     # Failed to update userdb
     else:
         return update_result
@@ -262,7 +265,7 @@ def update_userdb_schema(sql_script):
         for script in fixed_sql_script_list:
             if script:
                 globals.user_cursor.execute(script)
-                globals.user_connect.commit()
+            globals.user_connect.commit()
         return True, "Successfully updated userdb schema!"
     except Exception as e:
         print(f"Error: {e}")
