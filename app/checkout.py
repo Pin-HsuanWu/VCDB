@@ -41,7 +41,7 @@ def checkout(newBranchName, isNewBranchOrNot=False):
 
             # check if tail == current schema
             # dump current userdb's schema
-            fileName = dump.dump(globals.user_cursor)
+            fileName = dump.dump()
 
             result = diff.get_diff(f"./branch_tail_schema/{fileName}", f"./branch_tail_schema/{currentBranchName}.sql")
 
@@ -73,6 +73,8 @@ def checkout(newBranchName, isNewBranchOrNot=False):
             query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
             globals.vc_cursor.execute(query, [newBranchID, newBranchTail, globals.current_uid])
             globals.vc_connect.commit()
+            # delete tmp file
+            os.remove(f"./branch_tail_schema/{fileName}")
             
         else:
             # error check: whether the specified branch name exists in the branchname list
@@ -104,8 +106,7 @@ def checkout(newBranchName, isNewBranchOrNot=False):
         globals.vc_cursor.execute(query, [newBranchID, globals.current_uid])
         globals.vc_connect.commit()
 
-        # delete tmp file
-        os.remove(f"./branch_tail_schema/{fileName}")
+        
 
         #print success message
         print(f"Successfully checked out to branch {newBranchName}.")
