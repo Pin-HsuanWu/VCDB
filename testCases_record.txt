@@ -67,3 +67,6 @@ user / create
     add dot env
     connect to remote lab computer's vcdb
     login要改吃remote conn info
+
+GUI.py
+    fix return msg: 每個功能都要有成功或失敗的return msg顯示於 tkinter之上

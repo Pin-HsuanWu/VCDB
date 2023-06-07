@@ -131,7 +131,7 @@ class InitPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def init_database(self, db_user, pwd, host, port, user_db):
-        user.init(
+        return_msg = user.init(
             db_user, pwd, host, port, user_db
         )
         # print("vc_connect: ",vc_connect, "vc_cursor: ", vc_cursor, "user_connect: ", user_connect, "user_cursor: ",user_cursor)
@@ -140,7 +140,7 @@ class InitPage(tk.Frame):
         print(globals.user_connect, globals.user_cursor, globals.user_host,
               globals.userdb_name, globals.user_name, globals.vc_connect, globals.vc_cursor)
         print("======================================")
-        messagebox.showinfo('Init', 'Database initialized successfully.')
+        messagebox.showinfo('Init', return_msg)
 
 
 class RegisterPage(tk.Frame):
@@ -176,7 +176,7 @@ class RegisterPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def register_user(self, name, email):
-        user.register(name, email)
+        return_msg = user.register(name, email)
 
         if globals.vc_connect is None:
             print(
@@ -187,7 +187,7 @@ class RegisterPage(tk.Frame):
             print("======================================")
             print("check global variables: current_bid")
             print(globals.current_bid)
-            messagebox.showinfo('Register', 'User registered successfully.')
+            messagebox.showinfo('Register', return_msg)
 
 
 class LoginPage(tk.Frame):
@@ -229,7 +229,7 @@ class LoginPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:')
         pwd_label.grid(row=4, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var)
-        pwd_entry.insert(0, 'tubecity0212E_')
+        pwd_entry.insert(0, 'secure1234')
         pwd_entry.grid(row=4, column=1)
 
         host_label = tk.Label(self, text='Host:')
@@ -255,18 +255,28 @@ class LoginPage(tk.Frame):
         parse_button.grid(row=7, column=0, columnspan=2, pady=10)
 
     def login_user(self, user_db, pwd, host, user_db_name, name, email):
-        try:
-            user.login(user_db, pwd, host, user_db_name, name, email)
-            print("======================================")
-            print("check global variables: user_connect, user_cursor, user_host, userdb_name, user_name, vc_connect, vc_cursor, ")
-            print(globals.user_connect, globals.user_cursor, globals.user_host,
-                  globals.userdb_name, globals.user_name, globals.vc_connect, globals.vc_cursor)
-            print("======================================")
-            messagebox.showinfo('Login', "Login successfully.")
+        # try:
+        #     return_msg = user.login(user_db, pwd, host, user_db_name, name, email)
+        #     print("======================================")
+        #     print("check global variables: user_connect, user_cursor, user_host, userdb_name, user_name, vc_connect, vc_cursor, ")
+        #     print(globals.user_connect, globals.user_cursor, globals.user_host,
+        #           globals.userdb_name, globals.user_name, globals.vc_connect, globals.vc_cursor)
+        #     messagebox.showinfo('Login', "Login successfully.")
+        #     self.controller.show_frame(CommitPage)
+
+        # except Exception as e:
+        #     print(e)
+        #     messagebox.showinfo('Login', e)
+
+        return_msg = user.login(user_db, pwd, host, user_db_name, name, email)
+        print("======================================")
+        print("check global variables: user_connect, user_cursor, user_host, userdb_name, user_name, vc_connect, vc_cursor, ")
+        print(globals.user_connect, globals.user_cursor, globals.user_host,
+                globals.userdb_name, globals.user_name, globals.vc_connect, globals.vc_cursor)
+        messagebox.showinfo('Login', return_msg)
+        if return_msg != "Login fails.":
             self.controller.show_frame(CommitPage)
-        except Exception as e:
-            print(e)
-            messagebox.showinfo('Login', e)
+        
 
 # After login show the page below
 # class LogPage(tk.Frame):
@@ -344,14 +354,22 @@ class CommitPage(tk.Frame):
         parse_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def commit_user(self, msg):
-        try:
-            print(globals.vc_connect, globals.user_cursor,
+        # try:
+        #     print(globals.vc_connect, globals.user_cursor,
+        #           globals.vc_cursor, globals.current_uid, globals.current_bid)
+        #     version = commit.commit(msg)
+        #     messagebox.showinfo('Commit', "Commit successfully.")
+        # except Exception as e:
+        #     print(e)
+        #     messagebox.showinfo('Commit', e)
+        print("======================================")
+        print(globals.vc_connect, globals.user_cursor,
                   globals.vc_cursor, globals.current_uid, globals.current_bid)
-            commit.commit(msg)
+        result_version = commit.commit(msg)
+        if result_version != None:
             messagebox.showinfo('Commit', "Commit successfully.")
-        except Exception as e:
-            print(e)
-            messagebox.showinfo('Commit', e)
+        else:
+            messagebox.showinfo('Commit', "Cannot Commit.")
 
 
 class MergePage(tk.Frame):
@@ -492,7 +510,7 @@ class HopPage(tk.Frame):
 
     def app_checkout(self, destination):
         return_msg = hop.hop(destination)
-        messagebox.showinfo('Hop Result:', f"{return_msg}")
+        messagebox.showinfo('Hop Result:', return_msg)
 
 
 app = MyApp()

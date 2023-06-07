@@ -12,7 +12,7 @@ def hop(destination):
 
         if (userInfo[3] == None):  # 沒有 user 的 current_version 的紀錄
             print("Cannot find where you are!")
-            return
+            return "Cannot find where you are!"
 
         origin = str(userInfo[3])  # 起點
         
@@ -28,7 +28,7 @@ def hop(destination):
 
         if (destinationInfo == None):  # 沒有 destination 的紀錄
             print("Cannot find the destination!")
-            return
+            return "Cannot find the destination!"
 
         destinationTime = destinationInfo[5]
         
@@ -84,7 +84,7 @@ def hop(destination):
                     break
         else:
             print('You do not need to hop! You are here already!')
-            return
+            return 'You do not need to hop! You are here already!'
         
         
         # 確認是否可以更新
@@ -97,14 +97,17 @@ def hop(destination):
 
             # 執行更新
             # globals.user_cursor.execute(alterData)
+            print(globals.user_cursor)
             for statement in alterData.split(';'):
                 if len(statement.strip()) > 0:
                     globals.user_cursor.execute(statement + ';')
 
             print("Successfully hop and you hop", hopCount, "commit(s)!")
+            return "Successfully hop and you hop", hopCount, "commit(s)!"
             
         else:
             print('Cannot find the destination because it is not on the same branch!')
+            return 'Cannot find the destination because it is not on the same branch!'
     except:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]

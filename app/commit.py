@@ -20,7 +20,6 @@ def commit(msg):  # use globals
         query = "SELECT * FROM branch WHERE bid = '%s'" % globals.current_bid
         globals.vc_cursor.execute(query)
         branchInfo = globals.vc_cursor.fetchone()
-        print(branchInfo)
         
         # check if user can commit or not
         if (userInfo[3] != None):  # user 有 commit 過
@@ -55,7 +54,7 @@ def commit(msg):  # use globals
         if (upgrade == ""):
             os.remove(os.path.join(path, newSQL))
             print("Nothing to commit")
-            return "Nothing to commit"
+            return
         
         
         # update commit table

@@ -17,16 +17,15 @@ def dump(cur):
         # Getting all table names
         newuserconn = m.connect(host=globals.user_host, database=globals.userdb_name, user=globals.user_name, passwd=globals.user_pwd)
         cur = newuserconn.cursor()
-        globals.user_cursor = cur
-        globals.user_connect = cur
-        cur.execute('use userdb;')
-        cur.execute('SHOW TABLES;')
+        globals.user_cursor = newuserconn.cursor()
+        globals.user_connect = newuserconn
+        globals.user_cursor.execute('use userdb;')
+        globals.user_cursor.execute('SHOW TABLES;')
         tables = []
         
         for record in globals.user_cursor.fetchall():
             tables.append(record[0])
 
-        print(tables)
         for table in tables:
             # data += "DROP TABLE IF EXISTS `" + str(table) + "`;"
 

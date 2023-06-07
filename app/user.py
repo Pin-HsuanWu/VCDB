@@ -41,7 +41,7 @@ def init(user, pwd, host, port, database_name):
         # vc_cursor.execute(f"INSERT INTO branch (name) VALUES ('main');")
         # vc_connect.commit()
         print("Im init")
-        return
+        return "Database initialized successfully!"
     
     except:
     # except Exception as e:
@@ -56,7 +56,7 @@ def init(user, pwd, host, port, database_name):
         # print(e)
         # print("Im init")
         # return None
-        return
+        return "Init fails"
     
 def register(user_name, user_email):
     try:
@@ -72,7 +72,7 @@ def register(user_name, user_email):
         result = globals.vc_cursor.fetchone()
         globals.current_bid = result
         print("Successfully registered.")
-        return
+        return "Successfully registered."
     except:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -82,7 +82,7 @@ def register(user_name, user_email):
         print("Error occurs in line:", exc_tb.tb_lineno)
         print("Error msg:", exc_obj)
         print("============================================")
-        return
+        return "Register fails"
 
 
 def login(user, pwd, host,  database_name, user_name, user_email):
@@ -122,10 +122,9 @@ def login(user, pwd, host,  database_name, user_name, user_email):
         globals.current_uid = current_uid
         globals.current_version = current_version
         globals.current_bid = current_bid
-        print(globals.current_uid, globals.current_bid)
         # db_cursor.execute(f"select bid from branch where name = '{user_name}' AND email = '{user_email}'")
 
-        return 
+        return "Successfully logged in."
 
     # except Exception as e:
     except:
@@ -138,4 +137,4 @@ def login(user, pwd, host,  database_name, user_name, user_email):
         print("Error msg:", exc_obj)
         print("============================================")
         # print(e)
-        # return None
+        return "Login fails."
