@@ -57,22 +57,7 @@ def checkout(newBranchName, isNewBranchOrNot=False):
             for statement in targetBranchTailCommands.split(';'):
                 if len(statement.strip()) > 0:
                     globals.user_cursor.execute(statement + ';')
-            # update user table: current_bid, current_version
-            # if checking out to an existing branch, the user will be on the latest commit of the target branch
-            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
-            globals.vc_cursor.execute(query, [newBranchName])
-            result = globals.vc_cursor.fetchone()[0]
-            # deals with condition when branch doesn't have tail
-            if type(result) == int:
-                newBranchID = result
-                newBranchTail = ""
-            else:
-                newBranchID, newBranchTail = result
-
-            globals.vc_cursor.execute("use vcdb;")
-            query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
-            globals.vc_cursor.execute(query, [newBranchID, newBranchTail, globals.current_uid])
-            globals.vc_connect.commit()
+            
             # delete tmp file
             os.remove(f"./branch_tail_schema/{fileName}")
             
@@ -93,19 +78,31 @@ def checkout(newBranchName, isNewBranchOrNot=False):
             globals.vc_connect.commit()
 
 
-        #update user table: current_bid, current_version
-        query = "SELECT bid FROM vcdb.branch where name = %s;"
+        # update user table: current_bid, current_version
+        globals.vc_cursor.execute("use vcdb;")
+        query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
         globals.vc_cursor.execute(query, [newBranchName])
-        newBranchID = globals.vc_cursor.fetchone()[0]
+        result = globals.vc_cursor.fetchall()[0]
+        print(result)
+        if type(result) == int:
+            newBranchID = result
+            newTail = ""
+        else:
+            newBranchID, newTail = result
 
         globals.vc_cursor.execute("use vcdb;")
-        query = "UPDATE user SET current_bid = %s WHERE uid = %s;"
-        globals.vc_cursor.execute(query, [newBranchID, globals.current_uid])
-        globals.vc_connect.commit()
-        query = "UPDATE user SET current_bid = %s WHERE uid = %s;"
-        globals.vc_cursor.execute(query, [newBranchID, globals.current_uid])
+        query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
+        globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
         globals.vc_connect.commit()
 
+        # update global variables: current_bid
+        globals.current_bid = newBranchID
+
+        # lastly: create a newBranchName sql file in branch_tail_schema
+        if isNewBranchOrNot != "No":
+            file = open(f"./branch_tail_schema/{newBranchName}.sql","w")
+            file.writelines("")
+            file.close()
         
 
         #print success message
