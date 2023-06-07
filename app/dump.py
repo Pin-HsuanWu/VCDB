@@ -5,7 +5,7 @@ import globals
 import sys
 import os
 
-def dump():
+def dump(cur):
     try:
         # Data for Saving
         data = ""
@@ -15,13 +15,18 @@ def dump():
         # data += "\n\n"
 
         # Getting all table names
-        globals.user_cursor.execute('use userdb;')
-        globals.user_cursor.execute('SHOW TABLES;')
-        print(globals.user_cursor.fetchall())
+        newuserconn = m.connect(host=globals.user_host, database=globals.userdb_name, user=globals.user_name, passwd=globals.user_pwd)
+        cur = newuserconn.cursor()
+        globals.user_cursor = cur
+        globals.user_connect = cur
+        cur.execute('use userdb;')
+        cur.execute('SHOW TABLES;')
         tables = []
+        
         for record in globals.user_cursor.fetchall():
             tables.append(record[0])
 
+        print(tables)
         for table in tables:
             # data += "DROP TABLE IF EXISTS `" + str(table) + "`;"
 

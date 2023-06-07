@@ -14,11 +14,13 @@ def commit(msg):  # use globals
         query = "SELECT * FROM user WHERE uid = '%s';" % globals.current_uid
         globals.vc_cursor.execute(query)
         userInfo = globals.vc_cursor.fetchone()
+        print(userInfo)
         
         # get 目前 branch 的相關資訊
         query = "SELECT * FROM branch WHERE bid = '%s'" % globals.current_bid
         globals.vc_cursor.execute(query)
         branchInfo = globals.vc_cursor.fetchone()
+        print(branchInfo)
         
         # check if user can commit or not
         if (userInfo[3] != None):  # user 有 commit 過
@@ -32,12 +34,14 @@ def commit(msg):  # use globals
         elif (userInfo[3] == None and branchInfo[2] != None):  # user 沒有 commit 過 但該 branch 有紀錄
             print("Please update to the newest version of the branch first!")
             return
-            
         
         # dump
         path = "./branch_tail_schema"
-        newSQL = dump()  # return file name
+        newSQL = dump(globals.user_cursor)  # return file name
         oldSQL = str(branchInfo[1]) + '.sql'  # exist branchName.sql if the branch has been commited before
+
+
+        ##############################################################
         
         # diff
         if (branchInfo[2] != None):  # 該 branch 有紀錄
@@ -87,6 +91,8 @@ def commit(msg):  # use globals
         print("Successfully commit")
         globals.vc_connect.commit()
 
+        return version
+
     except:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -97,9 +103,7 @@ def commit(msg):  # use globals
         print("Error msg:", exc_obj)
         print("============================================")
 
-
-
-    return version
+    
     
 # if __name__ == '__main__':
 #     msg = "commit"
