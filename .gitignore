@@ -1,2 +1,5 @@
 .env
 venv/
+app/__pycache__/
+branch_tail_schema/branch1.sql
+branch_tail_schema/branch2.sql
