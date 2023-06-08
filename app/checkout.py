@@ -12,9 +12,10 @@ import dump
 import diff
 import globals
 import sys
+import commit
 
 # function
-def checkout(newBranchName, isNewBranchOrNot):
+def checkout(newBranchName, isNewBranchOrNot=False):
     print("start checking out.")
 
     # get user's current branch name.
@@ -61,6 +62,9 @@ def checkout(newBranchName, isNewBranchOrNot):
             # delete tmp file
             os.remove(f"./branch_tail_schema/{fileName}")
             
+            # update global variables: current_bid
+            globals.current_bid = newBranchID
+
         else:
             # error check: whether the specified branch name exists in the branchname list
             query = "SELECT name FROM vcdb.branch;"
@@ -71,19 +75,38 @@ def checkout(newBranchName, isNewBranchOrNot):
                 print("Please create a branch name that is not identical to the existing ones.")
                 return "Please create a branch name that is not identical to the existing ones."
 
-            # update branch table: add new branch 
+            # insert branch table a new row 
             globals.vc_cursor.execute("use vcdb;")       
-            query = "insert into branch (name, tail) values(%s, %s);"
-            globals.vc_cursor.execute(query, [newBranchName, ""])
+            query = "insert into branch (name) values(%s);"
+            globals.vc_cursor.execute(query, [newBranchName])
             globals.vc_connect.commit()
 
+            # create an empty newBranchName sql file in branch_tail_schema
+            file = open(f"./branch_tail_schema/{newBranchName}.sql","w")
+            file.writelines("")
+            file.close()            
 
-        # update user table: current_bid, current_version
+            # update current bid
+            query = f"SELECT bid FROM vcdb.branch where name = {newBranchName};"
+            globals.vc_cursor.execute(query)
+            currentBranchID = globals.vc_cursor.fetchone()[0]
+            globals.current_bid = currentBranchID
+
+            # checking out to a new branch, commit current user schema, so the newBranch can be linked to the old branch
+            commit.commit(f"Checkout new branch {newBranchName} from old branch {currentBranchName}")
+
+            # update branch table: update new branch's branch tail
+            # select new branch's branch ID
+            globals.vc_cursor.execute(f"select bid from vcdb.branch where name = {newBranchName}")
+            newBranchID = globals.vc_cursor.fetchone()[0]
+            print(type(newBranchID), newBranchID)
+
+
+        # update vcdb user table: current_bid, current_version
         globals.vc_cursor.execute("use vcdb;")
         query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
         globals.vc_cursor.execute(query, [newBranchName])
         result = globals.vc_cursor.fetchall()[0]
-        print(result)
         if type(result) == int:
             newBranchID = result
             newTail = ""
@@ -94,16 +117,6 @@ def checkout(newBranchName, isNewBranchOrNot):
         query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
         globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
         globals.vc_connect.commit()
-
-        # update global variables: current_bid
-        globals.current_bid = newBranchID
-
-        # lastly: create a newBranchName sql file in branch_tail_schema
-        if isNewBranchOrNot != "No":
-            file = open(f"./branch_tail_schema/{newBranchName}.sql","w")
-            file.writelines("")
-            file.close()
-        
 
         #print success message
         print(f"Successfully checked out to branch {newBranchName}.")
