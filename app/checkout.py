@@ -12,9 +12,10 @@ import dump
 import diff
 import globals
 import sys
+import commit
 
 # function
-def checkout(newBranchName, isNewBranchOrNot=False):
+def checkout(newBranchName, isNewBranchOrNot):
     print("start checking out.")
 
     # get user's current branch name.
@@ -49,11 +50,11 @@ def checkout(newBranchName, isNewBranchOrNot=False):
                 print("Please commit before checking out to another branch.")
                 return "Please commit before checking out to another branch."
             # directly change userdb's schema: drop whole schema + import newBranch schema to it
-            query = 'drop schema userdb;'
+            query = f"drop schema {globals.userdb_name};"
             globals.user_cursor.execute(query)
             targetBranchTailCommands = diff.read_sql_file(f"./branch_tail_schema/{newBranchName}.sql")
-            globals.user_cursor.execute("create database userdb;")
-            globals.user_cursor.execute("use userdb;")
+            globals.user_cursor.execute(f"create database {globals.userdb_name};")
+            globals.user_cursor.execute(f"use {globals.userdb_name};")
             for statement in targetBranchTailCommands.split(';'):
                 if len(statement.strip()) > 0:
                     globals.user_cursor.execute(statement + ';')
@@ -61,7 +62,25 @@ def checkout(newBranchName, isNewBranchOrNot=False):
             # delete tmp file
             os.remove(f"./branch_tail_schema/{fileName}")
             
-        else:
+            # update global variables: current_bid
+            globals.current_bid = newBranchID
+
+            # update vcdb user table: current_bid, current_version 
+            globals.vc_cursor.execute("use vcdb;")
+            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(query, [newBranchName])
+            result = globals.vc_cursor.fetchall()[0]
+            if type(result) == int:
+                newBranchID = result
+                newTail = ""
+            else:
+                newBranchID, newTail = result
+            globals.vc_cursor.execute("use vcdb;")
+            query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
+            globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
+            globals.vc_connect.commit()
+
+        else: #仿照 main branch狀況 
             # error check: whether the specified branch name exists in the branchname list
             query = "SELECT name FROM vcdb.branch;"
             globals.vc_cursor.execute(query)
@@ -71,39 +90,41 @@ def checkout(newBranchName, isNewBranchOrNot=False):
                 print("Please create a branch name that is not identical to the existing ones.")
                 return "Please create a branch name that is not identical to the existing ones."
 
-            # update branch table: add new branch 
+            # insert branch table a new row 
             globals.vc_cursor.execute("use vcdb;")       
-            query = "insert into branch (name, tail) values(%s, %s);"
-            globals.vc_cursor.execute(query, [newBranchName, ""])
+            query = "insert into branch (name) values(%s);"
+            globals.vc_cursor.execute(query, [newBranchName])
             globals.vc_connect.commit()
 
-
-        # update user table: current_bid, current_version
-        globals.vc_cursor.execute("use vcdb;")
-        query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
-        globals.vc_cursor.execute(query, [newBranchName])
-        result = globals.vc_cursor.fetchall()[0]
-        print(result)
-        if type(result) == int:
-            newBranchID = result
-            newTail = ""
-        else:
-            newBranchID, newTail = result
-
-        globals.vc_cursor.execute("use vcdb;")
-        query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
-        globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
-        globals.vc_connect.commit()
-
-        # update global variables: current_bid
-        globals.current_bid = newBranchID
-
-        # lastly: create a newBranchName sql file in branch_tail_schema
-        if isNewBranchOrNot != "No":
+            # create an empty newBranchName sql file in branch_tail_schema
             file = open(f"./branch_tail_schema/{newBranchName}.sql","w")
             file.writelines("")
-            file.close()
-        
+            file.close()            
+
+            # update current bid: for commit.py to fetch correct one
+            query = "SELECT bid FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(query, [newBranchName])
+            currentBranchID = globals.vc_cursor.fetchone()[0]
+            globals.current_bid = currentBranchID
+
+            # update vcdb user table: current_bid, current_version 
+            globals.vc_cursor.execute("use vcdb;")
+            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(query, [newBranchName])
+            result = globals.vc_cursor.fetchall()[0]
+            if type(result) == int:
+                newBranchID = result
+                newTail = ""
+            else:
+                newBranchID, newTail = result
+            globals.vc_cursor.execute("use vcdb;")
+            query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
+            globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
+            globals.vc_connect.commit()
+
+            # checking out to a new branch, commit current user schema, so the newBranch can be linked to the old branch
+            commit.commit(f"Checkout new branch {newBranchName} from old branch {currentBranchName}")
+
 
         #print success message
         print(f"Successfully checked out to branch {newBranchName}.")
