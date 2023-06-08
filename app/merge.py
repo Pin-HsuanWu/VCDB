@@ -240,7 +240,6 @@ def merge(main_branch_name, target_branch_name):
     else:
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
         result = merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict)
-        #TODO!!! 可能因為fk table順序問題造成error 該如何處理？？
         return result
 
 
@@ -274,8 +273,7 @@ def update_userdb_schema(main_branch_name, sql_script):
                 # Create original schema
                 main_branch_tail_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
                 globals.user_cursor.execute(main_branch_tail_schema)
-                globals.user_cursor.execute("SET foreign_key_checks = 1;")
-                return False, f"Error: {e}"
+                return False, f"Error: {e}", main_branch_tail_schema
     globals.user_cursor.execute("SET foreign_key_checks = 1;")
     return True, "Successfully updated userdb schema!"
 
@@ -310,7 +308,7 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
         return is_merged, msg
     # else failed to update userdb schema, return error message
     else:
-        return is_merged, update_result[1]
+        return is_merged, update_result[1], update_result[2]
 
 # TEST
 if __name__ == '__main__':
