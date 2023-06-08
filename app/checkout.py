@@ -14,7 +14,7 @@ import globals
 import sys
 
 # function
-def checkout(newBranchName, isNewBranchOrNot=False):
+def checkout(newBranchName, isNewBranchOrNot):
     print("start checking out.")
 
     # get user's current branch name.
