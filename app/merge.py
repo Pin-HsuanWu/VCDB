@@ -273,7 +273,7 @@ def update_userdb_schema(main_branch_name, sql_script):
                 # Create original schema
                 main_branch_tail_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
                 globals.user_cursor.execute(main_branch_tail_schema)
-                return False, f"Error: {e}", main_branch_tail_schema
+                return False, f"Error: {e}", sql_script
     globals.user_cursor.execute("SET foreign_key_checks = 1;")
     return True, "Successfully updated userdb schema!"
 
