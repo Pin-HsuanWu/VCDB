@@ -52,8 +52,8 @@ def checkout(newBranchName, isNewBranchOrNot):
             query = f"drop schema {globals.userdb_name};"
             globals.user_cursor.execute(query)
             targetBranchTailCommands = diff.read_sql_file(f"./branch_tail_schema/{newBranchName}.sql")
-            globals.user_cursor.execute("create database userdb;")
-            globals.user_cursor.execute("use userdb;")
+            globals.user_cursor.execute(f"create database {globals.userdb_name};")
+            globals.user_cursor.execute(f"use {globals.userdb_name};")
             for statement in targetBranchTailCommands.split(';'):
                 if len(statement.strip()) > 0:
                     globals.user_cursor.execute(statement + ';')
