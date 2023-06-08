@@ -46,10 +46,10 @@ def commit(msg):  # use globals
         downgrade = get_diff(os.path.join(path, newSQL), None)
 
     # check if upgrade = nothing
-    if (upgrade == ""):
-        os.remove(os.path.join(path, newSQL))
-        print("Nothing to commit")
-        return
+    # if (upgrade == ""):
+    #     os.remove(os.path.join(path, newSQL))
+    #     print("Nothing to commit")
+    #     return
     
     
     # update commit table
