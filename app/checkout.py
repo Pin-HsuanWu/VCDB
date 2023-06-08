@@ -15,7 +15,7 @@ import sys
 import commit
 
 # function
-def checkout(newBranchName, isNewBranchOrNot=False):
+def checkout(newBranchName, isNewBranchOrNot):
     print("start checking out.")
 
     # get user's current branch name.
@@ -65,7 +65,22 @@ def checkout(newBranchName, isNewBranchOrNot=False):
             # update global variables: current_bid
             globals.current_bid = newBranchID
 
-        else:
+            # update vcdb user table: current_bid, current_version 
+            globals.vc_cursor.execute("use vcdb;")
+            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(query, [newBranchName])
+            result = globals.vc_cursor.fetchall()[0]
+            if type(result) == int:
+                newBranchID = result
+                newTail = ""
+            else:
+                newBranchID, newTail = result
+            globals.vc_cursor.execute("use vcdb;")
+            query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
+            globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
+            globals.vc_connect.commit()
+
+        else: #仿照 main branch狀況 
             # error check: whether the specified branch name exists in the branchname list
             query = "SELECT name FROM vcdb.branch;"
             globals.vc_cursor.execute(query)
@@ -86,37 +101,30 @@ def checkout(newBranchName, isNewBranchOrNot=False):
             file.writelines("")
             file.close()            
 
-            # update current bid
-            query = f"SELECT bid FROM vcdb.branch where name = {newBranchName};"
-            globals.vc_cursor.execute(query)
+            # update current bid: for commit.py to fetch correct one
+            query = "SELECT bid FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(query, [newBranchName])
             currentBranchID = globals.vc_cursor.fetchone()[0]
             globals.current_bid = currentBranchID
+
+            # update vcdb user table: current_bid, current_version 
+            globals.vc_cursor.execute("use vcdb;")
+            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(query, [newBranchName])
+            result = globals.vc_cursor.fetchall()[0]
+            if type(result) == int:
+                newBranchID = result
+                newTail = ""
+            else:
+                newBranchID, newTail = result
+            globals.vc_cursor.execute("use vcdb;")
+            query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
+            globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
+            globals.vc_connect.commit()
 
             # checking out to a new branch, commit current user schema, so the newBranch can be linked to the old branch
             commit.commit(f"Checkout new branch {newBranchName} from old branch {currentBranchName}")
 
-            # update branch table: update new branch's branch tail
-            # select new branch's branch ID
-            globals.vc_cursor.execute(f"select bid from vcdb.branch where name = {newBranchName}")
-            newBranchID = globals.vc_cursor.fetchone()[0]
-            print(type(newBranchID), newBranchID)
-
-
-        # update vcdb user table: current_bid, current_version
-        globals.vc_cursor.execute("use vcdb;")
-        query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
-        globals.vc_cursor.execute(query, [newBranchName])
-        result = globals.vc_cursor.fetchall()[0]
-        if type(result) == int:
-            newBranchID = result
-            newTail = ""
-        else:
-            newBranchID, newTail = result
-
-        globals.vc_cursor.execute("use vcdb;")
-        query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
-        globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
-        globals.vc_connect.commit()
 
         #print success message
         print(f"Successfully checked out to branch {newBranchName}.")
