@@ -11,7 +11,7 @@ operations: (V: success, X: fail)
 4. on the same branch, hop to older version. V
 5. try to commit again to see if system blocks the situation V
 6. git log, see newest branch info 
-7. checkout to the newest version of main branch Ｖ
+7. hop to the newest version of main branch Ｖ
 7. try the commit again on newest version V
 
 8. checkout to a new branch branch 1 V
@@ -24,6 +24,18 @@ operations: (V: success, X: fail)
 #####################################################
 to be tested:
 10. merge main and branch1.
+no-conflict merge
+conflict merge: 
+狀況一：column改名 -> 系統不會把它當作conflict, merge conflict (系統假設：原col刪掉、增加一個新的col)
+狀況二：column attr改變(eg: int -> varchar) -> merge conflict
+狀況三：constraint:
+    - PK / FK新增 -> merge success
+    - PK / FK刪除 -> merge conflict
+狀況四：column增減：一樣，新增＝success, delete/update=conflict
+狀況五：table增減：一樣
+
+
+
 
 
 
@@ -53,8 +65,6 @@ diff
 
 
 dump
-    globals.user_cursor.execute('use userdb;')
-    globals.user_cursor.execute('SHOW TABLES;')
     每次衝新連線才可以更新到schema的變動，不然只能更新到column的改動
     要把下面的if main == main註解掉
 

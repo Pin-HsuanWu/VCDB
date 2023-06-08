@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import user
 import commit
-# import merge
+import merge
 import globals
 import checkout
 import hop
@@ -396,7 +396,7 @@ class MergePage(tk.Frame):
         merge_main_entry = tk.Entry(self, textvariable=merge_main_var)
         # merge_main_entry.insert(0, str(merge.getBranchName(current_bid)))
         merge_main_entry.grid(row=2, column=1)
-
+        
         merge_main_label = tk.Label(self, text='Merge Conflict:')
         merge_main_label.grid(row=3, column=0, sticky='e')
         self.result_text = tk.Text(self, height=30, width=50)
@@ -414,29 +414,31 @@ class MergePage(tk.Frame):
         conflict_button = tk.Button(
             self,
             text='solve conflict',
-            command=lambda: self.merge_GUI(
-                merge_main_var.get(), merge_target_var.get()
+            command=lambda: self.after_merge_GUI(
+                merge_main_var.get(), merge_target_var.get(), merge_target_var.get()
             ),
         )
         conflict_button.grid(row=5, column=2, columnspan=5, pady=10)
 
+
     def merge_GUI(self, main_bname, target_bname):
         try:
-            conflict_msg = merge.merge(main_bname, target_bname)
-            self.result_text.delete(1.0, tk.END)  # Clear previous content
-            # Update with the return value
-            self.result_text.insert(tk.END, conflict_msg)
-            print(main_bname, target_bname)
-
+            is_merged, conflict_msg = merge.merge(main_bname, target_bname)
+            if is_merged:
+                messagebox(conflict_msg)
+            else:
+                self.result_text.delete(1.0, tk.END)  # Clear previous content
+                self.result_text.insert(tk.END, conflict_msg)  # Update with the return value
+                print(main_bname, target_bname)
+        
         except Exception as e:
             print(e)
             messagebox.showinfo('Merge', e)
-
+    
     def after_merge_GUI(self, main_bname, target_bname, fixed_sql_script):
         try:
-            merge.merge_after_conflict_fixed(
-                main_bname, target_bname, fixed_sql_script)
-
+            merge.merge_after_conflict_fixed(main_bname, target_bname, fixed_sql_script)
+        
         except Exception as e:
             print(e)
             messagebox.showinfo('Merge', e)
