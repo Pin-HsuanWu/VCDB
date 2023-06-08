@@ -1,5 +1,6 @@
 .env
 venv/
+app/__pycache__/
 .DS_Store
 branch_tail_schema/.DS_Store
 branch_tail_schema/1_dump.sql
