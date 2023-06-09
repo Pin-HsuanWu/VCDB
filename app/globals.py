@@ -10,7 +10,7 @@ def globalvar_initiation():
     global user_connect
     global vc_cursor
     global user_cursor
-    global database_name
+    global vcdb_name
     global current_uid
     global user_host
     global user_pwd
@@ -26,7 +26,7 @@ def globalvar_initiation():
     vc_cursor = None
     user_cursor = None
     current_uid = None
-    database_name = 'vcdb'
+    vcdb_name = 'vcdb'
     user_host = None
     user_pwd = None
     user_port = None

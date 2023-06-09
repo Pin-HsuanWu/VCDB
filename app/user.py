@@ -64,7 +64,7 @@ def register(user_name, user_email):
         user_uuid = str(uuid.uuid4())
 
         #Update user table
-        globals.vc_cursor.execute("USE vcdb;")
+        globals.vc_cursor.execute(f"USE '{globals.vcdb_name}';")
         globals.vc_cursor.execute(f"INSERT INTO user (uid, name, email, current_bid) VALUES ('{user_uuid}', '{user_name}', '{user_email}', '1');")
         globals.vc_connect.commit()
         globals.vc_cursor.execute("select bid from branch where name = 'main';")
@@ -108,12 +108,12 @@ def login(user, pwd, host,  database_name, user_name, user_email):
         globals.user_name = user
         globals.user_pwd = pwd
 
-        vc_connect  = mysql.connector.connect(host=vcdb_host, database="vcdb", user=vcdb_user, passwd=vcdb_pwd, port=vcdb_port)
+        vc_connect  = mysql.connector.connect(host=vcdb_host, database=globals.vcdb_name, user=vcdb_user, passwd=vcdb_pwd, port=vcdb_port)
         vc_cursor = vc_connect.cursor()
         globals.vc_connect = vc_connect
         globals.vc_cursor = vc_cursor
 
-        vc_cursor.execute("USE vcdb;")
+        vc_cursor.execute(f"USE '{globals.vcdb_name}';")
         vc_cursor.execute(f"select uid, current_version, current_bid from user where name = '{user_name}' AND email = '{user_email}'")
         result = vc_cursor.fetchone()
         current_uid, current_version, current_bid = result
@@ -142,7 +142,7 @@ def log():
     try:
         print("=============== into log function ==============")
         print(globals.vc_cursor)
-        globals.vc_cursor.execute("USE vcdb;")
+        globals.vc_cursor.execute(f"USE '{globals.vcdb_name}';")
         globals.vc_cursor.execute(f"select name, version, time, uid, msg from branch, commit where branch.bid = commit.bid and commit.bid = '{globals.current_bid}';")
         result = globals.vc_cursor.fetchall()
         current_branch_name = result
@@ -159,7 +159,7 @@ def getBnameFromBid():
     try:
         print("=============== into getBnameFromBid function ==============")
         print(globals.vc_cursor)
-        globals.vc_cursor.execute("USE vcdb;")
+        globals.vc_cursor.execute(f"USE '{globals.vcdb_name}';")
         globals.vc_cursor.execute(f"select name from branch where branch.bid = '{globals.current_bid}';")
         result = globals.vc_cursor.fetchone()[0]
         print("===============")

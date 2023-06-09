@@ -22,7 +22,7 @@ def create():
 
         globals.vc_connect = vc_connect
         globals.vc_cursor = vc_cursor
-        vc_cursor.execute("USE vcdb;")
+        vc_cursor.execute(f"USE '{globals.vcdb_name}';")
 
 
         # creating tables for vcdb: branch, commit, user, merge

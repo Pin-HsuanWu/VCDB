@@ -20,19 +20,19 @@ def checkout(newBranchName, isNewBranchOrNot):
 
     # get user's current branch name.
     # assume userid is global variable
-    query = "SELECT current_bid FROM vcdb.user where uid = %s;"
+    query = f"SELECT current_bid FROM {globals.vcdb_name}.user where uid = %s;"
     globals.vc_cursor.execute(query, [globals.current_uid])
     currentBranchID = globals.vc_cursor.fetchone()[0]
 
     # store current branche name
-    query = f"SELECT name FROM vcdb.branch where bid = {currentBranchID};"
+    query = f"SELECT name FROM {globals.vcdb_name}.branch where bid = {currentBranchID};"
     globals.vc_cursor.execute(query)
     currentBranchName = globals.vc_cursor.fetchone()[0]
 
     try:
         if isNewBranchOrNot == "No":
             # error check: whether the specified branch name exists in the branchname list
-            query = "SELECT name FROM vcdb.branch;"
+            query = f"SELECT name FROM {globals.vcdb_name}.branch;"
             globals.vc_cursor.execute(query)
             allBranchNames = globals.vc_cursor.fetchall()
             allBranchNames = ["%s" % x for x in allBranchNames]
@@ -66,8 +66,8 @@ def checkout(newBranchName, isNewBranchOrNot):
             globals.current_bid = newBranchID
 
             # update vcdb user table: current_bid, current_version 
-            globals.vc_cursor.execute("use vcdb;")
-            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")
+            query = f"SELECT bid, tail FROM {globals.vcdb_name}.branch where name = %s;"
             globals.vc_cursor.execute(query, [newBranchName])
             result = globals.vc_cursor.fetchall()[0]
             if type(result) == int:
@@ -75,14 +75,14 @@ def checkout(newBranchName, isNewBranchOrNot):
                 newTail = ""
             else:
                 newBranchID, newTail = result
-            globals.vc_cursor.execute("use vcdb;")
+            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")
             query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
             globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
             globals.vc_connect.commit()
 
         else: #仿照 main branch狀況 
             # error check: whether the specified branch name exists in the branchname list
-            query = "SELECT name FROM vcdb.branch;"
+            query = f"SELECT name FROM {globals.vcdb_name}.branch;"
             globals.vc_cursor.execute(query)
             allBranchNames = globals.vc_cursor.fetchall()
             allBranchNames = ["%s" % x for x in allBranchNames]
@@ -91,7 +91,7 @@ def checkout(newBranchName, isNewBranchOrNot):
                 return "Please create a branch name that is not identical to the existing ones."
 
             # insert branch table a new row 
-            globals.vc_cursor.execute("use vcdb;")       
+            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")       
             query = "insert into branch (name) values(%s);"
             globals.vc_cursor.execute(query, [newBranchName])
             globals.vc_connect.commit()
@@ -102,14 +102,14 @@ def checkout(newBranchName, isNewBranchOrNot):
             file.close()            
 
             # update current bid: for commit.py to fetch correct one
-            query = "SELECT bid FROM vcdb.branch where name = %s;"
+            query = f"SELECT bid FROM {globals.vcdb_name}.branch where name = %s;"
             globals.vc_cursor.execute(query, [newBranchName])
             currentBranchID = globals.vc_cursor.fetchone()[0]
             globals.current_bid = currentBranchID
 
             # update vcdb user table: current_bid, current_version 
-            globals.vc_cursor.execute("use vcdb;")
-            query = "SELECT bid, tail FROM vcdb.branch where name = %s;"
+            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")
+            query = f"SELECT bid, tail FROM {globals.vcdb_name}.branch where name = %s;"
             globals.vc_cursor.execute(query, [newBranchName])
             result = globals.vc_cursor.fetchall()[0]
             if type(result) == int:
@@ -117,7 +117,7 @@ def checkout(newBranchName, isNewBranchOrNot):
                 newTail = ""
             else:
                 newBranchID, newTail = result
-            globals.vc_cursor.execute("use vcdb;")
+            globals.vc_cursor.execute(f"use {globals.vcdb_name};")
             query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
             globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
             globals.vc_connect.commit()

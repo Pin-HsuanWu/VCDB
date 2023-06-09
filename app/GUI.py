@@ -109,7 +109,7 @@ class InitPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:')
         pwd_label.grid(row=2, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*')
-        pwd_entry.insert(0)
+        # pwd_entry.insert(0, '')
         pwd_entry.grid(row=2, column=1)
 
         host_label = tk.Label(self, text='Host:')
@@ -238,7 +238,7 @@ class LoginPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:')
         pwd_label.grid(row=4, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*')
-        pwd_entry.insert(0)
+        # pwd_entry.insert(0, '')
         pwd_entry.grid(row=4, column=1)
 
         host_label = tk.Label(self, text='Host:')
