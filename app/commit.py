@@ -91,7 +91,7 @@ def commit(msg):  # use globals
 
 
 # Commit for merge
-def commit(msg, from_merge):
+def commit_after_merged(msg):
     
     # get 目前 user 的相關資訊
     query = "SELECT * FROM user WHERE uid = '%s';" % globals.current_uid
@@ -115,16 +115,6 @@ def commit(msg, from_merge):
     else:
         upgrade = get_diff(None, os.path.join(path, newSQL))
         downgrade = get_diff(os.path.join(path, newSQL), None)
-
-    # If from merge, don't do this check
-    if from_merge:
-        pass
-    else:
-        # check if upgrade = nothing
-        if (upgrade == ""):
-            os.remove(os.path.join(path, newSQL))
-            print("Nothing to commit")
-            return
     
     # update commit table
     version = str(uuid.uuid4())[:8]  # uuid (八位數的亂數)
