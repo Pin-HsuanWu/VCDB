@@ -16,6 +16,7 @@ def globalvar_initiation():
     global user_pwd
     global user_port
     global user_name
+    global current_branch_name
 
     userdb_name = None
     current_version = None
@@ -30,6 +31,7 @@ def globalvar_initiation():
     user_pwd = None
     user_port = None
     user_name = None
+    current_branch_name = None
 
 
 globalvar_initiation()

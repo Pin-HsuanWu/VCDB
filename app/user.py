@@ -64,7 +64,6 @@ def register(user_name, user_email):
         user_uuid = str(uuid.uuid4())
 
         #Update user table
-        print(globals.vc_cursor)
         globals.vc_cursor.execute("USE vcdb;")
         globals.vc_cursor.execute(f"INSERT INTO user (uid, name, email, current_bid) VALUES ('{user_uuid}', '{user_name}', '{user_email}', '1');")
         globals.vc_connect.commit()
@@ -138,3 +137,20 @@ def login(user, pwd, host,  database_name, user_name, user_email):
         print("============================================")
         # print(e)
         return "Login fails."
+
+def getBnameFromBid():
+    try:
+        print("=============== into getBnameFromBid function ==============")
+        print(globals.vc_cursor)
+        globals.vc_cursor.execute("USE vcdb;")
+        globals.vc_cursor.execute(f"select name from branch where branch.bid = '{globals.current_bid}';")
+        result = globals.vc_cursor.fetchone()[0]
+        print("===============")
+        print(result)
+        current_branch_name = result
+        globals.current_branch_name = current_branch_name
+        print("Get Bname Successfully.")
+        return
+    
+    except Exception as e:
+        return("Get error: ",e)

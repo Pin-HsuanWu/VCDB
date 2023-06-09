@@ -9,11 +9,13 @@ import sys
 import os
 
 def commit(msg):  # use globals
+    print("------inside commit---------")
     try:
         # get 目前 user 的相關資訊
         query = "SELECT * FROM user WHERE uid = '%s';" % globals.current_uid
         globals.vc_cursor.execute(query)
         userInfo = globals.vc_cursor.fetchone()
+        
         print(userInfo)
         
         # get 目前 branch 的相關資訊
