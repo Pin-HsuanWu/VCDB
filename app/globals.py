@@ -24,6 +24,6 @@ def globalvar_initiation():
     vc_cursor = None
     user_cursor = None
     current_uid = None
-    vcdb_name = None
+    vcdb_name = "vcdb"
 
 globalvar_initiation()
