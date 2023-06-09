@@ -205,7 +205,7 @@ def get_branch_tail_version(branch_name):
 
 """
 Check if 2 branches can be merged
-Y: Branches merged  -> error???
+Y: Branches merged
 N: Return conflict sql script
 """
 def merge(main_branch_name, target_branch_name):
@@ -306,7 +306,7 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
         print(update_result[1])
         # Call commit()
         msg = f"Merge {target_branch_name} into {main_branch_name} after conflict fixed"
-        merged_version = commit(msg)
+        merged_version = commit(msg, from_merge=True)
 
         # Insert merge info into merge table
         insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
@@ -353,18 +353,23 @@ CREATE TABLE `teacher` (
 """
     fixed_sql_script_2 = """
 
-
-
+CREATE TABLE `course` (
+  `Id` varchar(10) NOT NULL,
+  `Name` varchar(20) NOT NULL,
+  `TeacherID` varchar(20) NOT NULL,
+  KEY `fk_teach` (`TeacherID`),
+  CONSTRAINT `fk_teach` FOREIGN KEY (`TeacherID`) REFERENCES `teacher` (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `student` (
   `Id` varchar(20) NOT NULL,
   `Name` varchar(20) NOT NULL,
-  `Grade` int(11) NOT NULL,
+  `Grade` int NOT NULL,
   `Department` varchar(20) NOT NULL,
   `Gender` varchar(20) NOT NULL,
   PRIMARY KEY (`Id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE `teacher` (
@@ -373,15 +378,7 @@ CREATE TABLE `teacher` (
   `Department` varchar(20) NOT NULL,
   `Gender` varchar(20) NOT NULL,
   PRIMARY KEY (`Id`)
-);
-
-CREATE TABLE `course` (
-  `Id` varchar(10) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `TeacherID` varchar(20) NOT NULL,
-  KEY fk_teach (`TeacherID`),
-  CONSTRAINT fk_teach FOREIGN KEY (`TeacherID`) REFERENCES teacher (`Id`));
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 """
     print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script_1)}")
