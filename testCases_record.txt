@@ -1,0 +1,25 @@
+user first register in our system, on main
+user login
+
+operations: 
+0. check current condition: main branch
+1. commit init db schema
+2. alter table: drop column, drop table
+3. commit again
+4. on the same branch, hop to older version. 
+5. try to commit again to see if system blocks the situation 
+6. git log, see newest branch info 
+7. hop to the newest version of main branch 
+8. try the commit again on newest version 
+9. checkout to a new branch branch1 
+10. commit on the new branch 
+11. checkout back to an older branch 
+12. try to checkout to a branch that does not exist
+13. merge main & branch1
+    - no-conflict merge
+    - conflict merge: 
+        狀況一：column改名 -> 系統不會把它當作conflict, merge conflict (系統假設：原col刪掉、增加一個新的col)
+        狀況二：column attr改變 (eg: int -> varchar) -> merge conflict
+        狀況三：constraint:
+            - PK / FK / columns / table 新增 -> merge success
+            - PK / FK / columns / table 刪除 -> merge conflict

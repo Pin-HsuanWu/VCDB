@@ -18,7 +18,7 @@ def init_connections():
     pwd = os.getenv("MYSQL_PASSWORD")
 
     connection1 = mysql.connector.connect(
-        user=user, password=pwd, host='127.0.0.1', port="3306", database='vcdb')
+        user=user, password=pwd, host='127.0.0.1', port="3306", database=globals.vcdb_name)
     globals.connection1 = connection1
     globals.vc_cursor = connection1.cursor()
     print("VCDB connected.")
