@@ -16,4 +16,4 @@
 3. run app
 - python3 ./app/GUI.py
 
-4. 參考 "testCase_record.txt" 測試功能
+4. 參考 test_doc.txt 測試功能
