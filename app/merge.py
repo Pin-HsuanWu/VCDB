@@ -3,7 +3,8 @@ import mysql.connector
 import uuid
 import datetime
 import time
-from globals import *
+import globals
+from commit import commit
 
 
 # Add branch format for sql script in different branch
@@ -59,6 +60,7 @@ def check_table_conflicts(is_conflict, table_name, branch1_name, table1, branch2
         attribute_str = generate_attribute_string(nonconflict_attr_dict) +',\n'+ attribute_str
     else:
         attribute_str = generate_attribute_string(nonconflict_attr_dict)
+    # sql_script += f"DROP TABLE IF EXISTS `{table_name}`;\n"
     sql_script += f"CREATE TABLE `{table_name}` (\n{attribute_str});\n"
     return is_conflict, sql_script
 
@@ -111,26 +113,64 @@ def merge_schema(commit1_dict, commit2_dict):
 
     return merged_schema
 
+def insert_into_merge_table(merged_version, main_tail_version, target_tail_version):
+    insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
+    val = (merged_version, main_tail_version, target_tail_version)
+    globals.vc_cursor.execute(insert, val)
+    globals.vc_connect.commit()
+    return 
 
+# Merge two branches by merged_schema_dict and main_schema_dict
+def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict):
+    is_merged = False
+    # Turn merged schema into sql script
+    merged_sql_script = generate_sql_diff({}, merged_schema_dict)
 
+    # Update userdb
+    update_result = update_userdb_schema(main_branch_name, merged_sql_script)
 
-def merge(main_branch_name, target_branch_name):
+    # Successfully update userdb
+    if update_result[0]:
+        # Call commit(msg) and get version number
+        msg = f"Merge {target_branch_name} into {main_branch_name}"
+        merged_version = commit(msg)
+        if merged_version:
+            # Insert into merge table
+            insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
+            return update_result[0], msg
+        else:
+            return False, "Failed to commit!"
+    # Failed to update userdb
+    else:
+        return update_result
     
-    # Check if 2 branches exist
-    query = "SELECT name, tail FROM branch WHERE name = (%s);"
-    vc_cursor.execute(query, (main_branch_name, ))
-    main_branch_existed = vc_cursor.fetchall()
-    if not main_branch_existed:
-        print(f"Branch {main_branch_name} does not exist.")
-        return
-    main_branch_version = main_branch_existed[0][1]
 
-    vc_cursor.execute(query, (target_branch_name,))
-    target_branch_existed = vc_cursor.fetchall()
-    if not target_branch_existed:
-        print(f"Branch {target_branch_name} does not exist.")
-        return
-    target_branch_version = target_branch_existed[0][1]
+def get_branch_tail_version(branch_name):
+    query = "SELECT name, tail FROM branch WHERE name = (%s);"
+    globals.vc_cursor.execute(query, (branch_name, ))
+    branch_existed = globals.vc_cursor.fetchall()
+    globals.vc_connect.commit()
+    if not branch_existed:
+        return None
+    else:
+        return branch_existed[0][1]
+
+"""
+Check if 2 branches can be merged
+Y: Branches merged
+N: Return conflict sql script
+"""
+def merge(main_branch_name, target_branch_name):
+    is_merged = False
+
+    # Check if 2 branches exist
+    main_tail_version = get_branch_tail_version(main_branch_name)
+    if main_tail_version is None:
+        return is_merged, f"Branch {main_branch_name} does not exist."
+    
+    target_tail_version = get_branch_tail_version(target_branch_name)
+    if target_tail_version is None:
+        return is_merged, f"Branch {target_branch_name} does not exist."
 
     # Read main branch tail and target branch tail sql file
     main_branch_path = f"./branch_tail_schema/{main_branch_name}.sql"
@@ -148,49 +188,86 @@ def merge(main_branch_name, target_branch_name):
         print("Schema conflict exists between 2 branches as follows:")
         conflict_sql_script = is_conflict[1]
         print(conflict_sql_script)
-        return conflict_sql_script
+        return is_merged, conflict_sql_script
     # if there is no conflict: merge 2 branches
     else:
-        # Merged schema
         merged_schema_dict = merge_schema(main_schema_dict, target_schema_dict)
-        downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
-        upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
+        result = merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name, target_tail_version, merged_schema_dict)
+        return result
 
 
-        msg = f"Merge {target_branch_name} into {main_branch_name}"
-        merged_version = str(uuid.uuid4())[:8]
+def sql_script_into_list(sql_script):
+    sql_script_list = sql_script.split(";")
+    sql_script_list.pop()
+    for i in range(len(sql_script_list)):
+        sql_script_list[i] = sql_script_list[i]+";"
+    return sql_script_list
 
-        # Get branch info
-        query = f"SELECT * FROM branch WHERE name = '{main_branch_name}'"
-        vc_cursor.execute(query)
-        main_branch_info = vc_cursor.fetchall()[0]
-        last_version = main_branch_info[2]
-        main_branch_id = main_branch_info[0]
-
-        # Insert into commit table
-        insert = "INSERT INTO commit (version, bid, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), current_uid, msg)
-        vc_cursor.execute(insert, val)
-
-        # Update branch table
-        update = "UPDATE branch SET tail = %s WHERE bid = %s;"
-        val = (merged_version, main_branch_id)
-        vc_cursor.execute(update, val)
-
-        # Insert into merge table
-        insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
-        val = (merged_version, main_branch_version, target_branch_version)
-        vc_cursor.execute(insert, val)
-
-        # Update user table
-        update = "UPDATE user SET current_version = %s, current_bid = %s WHERE uid = %s;"
-        val = (merged_version, main_branch_id, current_uid)
-        vc_cursor.execute(update, val)
-
-        vc_connect.commit()
-
-        print(f"Successfully merged {target_branch_name} into {main_branch_name}!")
-    return msg
+def update_userdb_schema(main_branch_name, sql_script):
+    # Drop all tables
+    globals.user_cursor.execute("SHOW Tables") 
+    existed_tables = globals.user_cursor.fetchall()
+    try:
+        for table in existed_tables:
+            globals.user_cursor.execute(f"DROP TABLE {table[0]};")
+            globals.user_connect.commit()
+    except Exception as e:
+        return False, f"When updating userdb schema, drop all tables failed.\nError: {e} "
     
+    # Execute fixed sql script
+    fixed_sql_script_list = sql_script_into_list(sql_script)
+    globals.user_cursor.execute("SET foreign_key_checks = 0;")
+    for script in fixed_sql_script_list:
+        if script:
+            try:
+                globals.user_cursor.execute(script)
+                globals.user_connect.commit()
+            except Exception as e:
+                # Create original schema
+                
+                main_branch_tail_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
+                main_branch_list = sql_script_into_list(main_branch_tail_schema)
+                for main_script in main_branch_list:
+                    if main_script:
+                        globals.user_cursor.execute(main_script)
+                        globals.user_connect.commit()
+                return False, f"Error: {e}", sql_script
+    globals.user_cursor.execute("SET foreign_key_checks = 1;")
+    return True, "Successfully updated userdb schema!"
 
 
+"""
+Merge 2 branches after conflict fixed
+"""
+def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
+    is_merged = False
+
+    # Check if 2 branches exist
+    main_tail_version = get_branch_tail_version(main_branch_name)
+    if main_tail_version is None:
+        return is_merged, f"Branch {main_branch_name} does not exist." 
+    target_tail_version = get_branch_tail_version(target_branch_name)
+    if target_tail_version is None:
+        return is_merged, f"Branch {target_branch_name} does not exist."
+
+    # Execute fixed sql script
+    update_result = update_userdb_schema(main_branch_name, fixed_sql_script)
+
+    # Successfully update userdb schema, return success message
+    if update_result[0]:
+        print(update_result[1])
+        # Call commit()
+        msg = f"Merge {target_branch_name} into {main_branch_name} after conflict fixed"
+        merged_version = commit(msg, from_merge=True)
+
+        # Insert merge info into merge table
+        insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
+        is_merged = True
+        return is_merged, msg
+    # else failed to update userdb schema, return error message
+    else:
+        return is_merged, update_result[1], update_result[2]
+
+
+if __name__ == '__main__':
+    merge('branch1', 'branch2')
