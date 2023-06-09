@@ -10,6 +10,7 @@ import hop
 import sys
 import os
 import utils
+import graph
 
 # if os.environ.get('DISPLAY','') == '':
 #     print('no display found. Using :0.0')
@@ -410,6 +411,13 @@ class LogPage(tk.Frame):
         )
         log_button.grid(row=2, column=0, columnspan=2, pady=10)
 
+        gitgraph_button = tk.Button(
+            self,
+            text='Draw A Git Graph!',
+            command=lambda: self.gitgraph(),
+        )
+        gitgraph_button.grid(row=3, column=0, columnspan=2, pady=10)
+
     def log_commit(self):
         try:
             result = user.log()
@@ -428,6 +436,11 @@ class LogPage(tk.Frame):
             uid = row[3]
             message = row[4]
             self.log_tree.insert("", tk.END, values=(bname, version, time, uid, message), tags=("center",))
+
+    def gitgraph(self):
+        graph.draw_git_graph()
+    
+    
 
 
 class MergePage(tk.Frame):

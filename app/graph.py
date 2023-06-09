@@ -1,4 +1,5 @@
-from globals import vc_cursor
+import globals
+# from globals import globals.vc_cursor
 import tkinter as tk
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -7,8 +8,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def get_commits_by_bid(bid):
     query = f"SELECT version, last_version, time FROM commit WHERE bid = {bid}"
-    vc_cursor.execute(query)
-    commits = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    commits = globals.vc_cursor.fetchall()
     sorted_commit_list = sorted(commits, key=lambda x: x[2], reverse=True)
     sorted_commit_list = [(x[0], x[1]) for x in sorted_commit_list]
     return sorted_commit_list
@@ -46,13 +47,13 @@ def draw_branch_graph(branch_info, graph, all_commit_list):
 def draw_git_graph():
     # Get all branch
     query = "SELECT * FROM branch"
-    vc_cursor.execute(query)
-    branch_list = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    branch_list = globals.vc_cursor.fetchall()
 
     # Get all commit
     query = "SELECT version FROM commit ORDER BY time"
-    vc_cursor.execute(query)
-    all_commit_list = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    all_commit_list = globals.vc_cursor.fetchall()
     all_commit_list = [x[0] for x in all_commit_list]
 
     # Create a directed graph
@@ -64,8 +65,8 @@ def draw_git_graph():
 
     # Get merge info
     query = "SELECT * FROM merge"
-    vc_cursor.execute(query)
-    merge_list = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    merge_list = globals.vc_cursor.fetchall()
     for merge in merge_list:
         graph.add_edge(merge[0], merge[2])
 
@@ -87,6 +88,6 @@ def draw_git_graph():
 
 
 
-if __name__ == '__main__':
-    # Example usage
-    draw_git_graph()
+# if __name__ == '__main__':
+#     # Example usage
+#     draw_git_graph()
