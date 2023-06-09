@@ -145,60 +145,13 @@ def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name
     # Failed to update userdb
     else:
         return update_result
-
-
-    """
-    # Merged schema
-    downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
-    upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
-
-    # msg = f"Merge {target_branch_name} into {main_branch_name}"
-    merged_version = str(uuid.uuid4())[:8]
-
-    # Get branch info
-    query = f"SELECT * FROM branch WHERE tail = '{main_tail_version}'"
-    globals.vc_cursor.execute(query)
-    main_branch_info = globals.vc_cursor.fetchall()[0]
-    if not main_branch_info:
-        return is_merged, "No such branch with this tail version!"
-    last_version = main_branch_info[2]
-    main_branch_id = main_branch_info[0]
-    msg = f"Merge {target_tail_version} into {main_tail_version}"
-
-
-    #### 只留merge table 其他call commit->要拿最新版
-
-    # Insert into commit table
-    insert = "INSERT INTO commit (version, bid, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), globals.current_uid, msg)
-    globals.vc_cursor.execute(insert, val)
-
-    # Update branch table
-    update = "UPDATE branch SET tail = %s WHERE bid = %s;"
-    val = (merged_version, main_branch_id)
-    globals.vc_cursor.execute(update, val)
-
-    # Insert into merge table
-    insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
-    val = (merged_version, main_tail_version, target_tail_version)
-    globals.vc_cursor.execute(insert, val)
-
-    # Update user table
-    update = "UPDATE user SET current_version = %s, current_bid = %s WHERE uid = %s;"
-    val = (merged_version, main_branch_id, globals.current_uid)
-    globals.vc_cursor.execute(update, val)
-
-    globals.vc_connect.commit()
-    """
-    print(f"Successfully merged {target_tail_version} into {main_tail_version}!")
-    is_merged = True
-    return is_merged, f"Successfully merged {target_tail_version} into {main_tail_version}!"
     
 
 def get_branch_tail_version(branch_name):
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
     globals.vc_cursor.execute(query, (branch_name, ))
     branch_existed = globals.vc_cursor.fetchall()
+    globals.vc_connect.commit()
     if not branch_existed:
         return None
     else:
@@ -206,7 +159,7 @@ def get_branch_tail_version(branch_name):
 
 """
 Check if 2 branches can be merged
-Y: Branches merged  -> error???
+Y: Branches merged
 N: Return conflict sql script
 """
 def merge(main_branch_name, target_branch_name):
@@ -253,48 +206,36 @@ def sql_script_into_list(sql_script):
     return sql_script_list
 
 def update_userdb_schema(main_branch_name, sql_script):
+    # Drop all tables
+    globals.user_cursor.execute("SHOW Tables") 
+    existed_tables = globals.user_cursor.fetchall()
     try:
-        # Drop all tables
-        globals.user_cursor.execute("SHOW Tables") 
-        existed_tables = globals.user_cursor.fetchall()
-        try:
-            for table in existed_tables:
-                globals.user_cursor.execute(f"DROP TABLE {table[0]};")
+        for table in existed_tables:
+            globals.user_cursor.execute(f"DROP TABLE {table[0]};")
+            globals.user_connect.commit()
+    except Exception as e:
+        return False, f"When updating userdb schema, drop all tables failed.\nError: {e} "
+    
+    # Execute fixed sql script
+    fixed_sql_script_list = sql_script_into_list(sql_script)
+    globals.user_cursor.execute("SET foreign_key_checks = 0;")
+    for script in fixed_sql_script_list:
+        if script:
+            try:
+                globals.user_cursor.execute(script)
                 globals.user_connect.commit()
-        except Exception as e:
-            return False, f"When updating userdb schema, drop all tables failed.\nError: {e} "
-        
-        # Execute fixed sql script
-        fixed_sql_script_list = sql_script_into_list(sql_script)
-        globals.user_cursor.execute("SET foreign_key_checks = 0;")
-        for script in fixed_sql_script_list:
-            if script:
-                try:
-                    for statement in script.split(';'):
-                        if len(statement.strip()) > 0:
-                            globals.user_cursor.execute(statement + ';')
-                    #globals.user_cursor.execute(script)
-                            globals.user_connect.commit()
-                except Exception as e:
-                    # Create original schema
-                    main_branch_tail_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
-                    for statement in main_branch_tail_schema.split(';'):
-                        if len(statement.strip()) > 0:
-                            globals.user_cursor.execute(statement + ';')
-                            globals.user_connect.commit()
-                    #globals.user_cursor.execute(main_branch_tail_schema)
-                    return False, f"Error: {e}", sql_script
-        globals.user_cursor.execute("SET foreign_key_checks = 1;")
-        return True, "Successfully updated userdb schema!"
-    except:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print("============================================")
-        print("Error file name: ", fname)
-        print("Error Type: ", exc_type)
-        print("Error occurs in line:", exc_tb.tb_lineno)
-        print("Error msg:", exc_obj)
-        print("============================================")
+            except Exception as e:
+                # Create original schema
+                
+                main_branch_tail_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
+                main_branch_list = sql_script_into_list(main_branch_tail_schema)
+                for main_script in main_branch_list:
+                    if main_script:
+                        globals.user_cursor.execute(main_script)
+                        globals.user_connect.commit()
+                return False, f"Error: {e}", sql_script
+    globals.user_cursor.execute("SET foreign_key_checks = 1;")
+    return True, "Successfully updated userdb schema!"
 
 
 """
@@ -302,8 +243,6 @@ Merge 2 branches after conflict fixed
 """
 def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_script):
     is_merged = False
-    print("-------------- merge after conflict fixed -----------------")
-    print(fixed_sql_script)
 
     # Check if 2 branches exist
     main_tail_version = get_branch_tail_version(main_branch_name)
@@ -321,7 +260,7 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
         print(update_result[1])
         # Call commit()
         msg = f"Merge {target_branch_name} into {main_branch_name} after conflict fixed"
-        merged_version = commit(msg)
+        merged_version = commit(msg, from_merge=True)
 
         # Insert merge info into merge table
         insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
@@ -331,39 +270,6 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
     else:
         return is_merged, update_result[1], update_result[2]
 
-# TEST
+
 if __name__ == '__main__':
-    # merge('branch1', 'branch2')
-    fixed_sql_script = """
-
-CREATE TABLE `course` (
-  `Id` varchar(10) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `TeacherID` varchar(20) NOT NULL,
-  KEY fk_teach (`TeacherID`),
-  CONSTRAINT fk_teach FOREIGN KEY (`TeacherID`) REFERENCES teacher (`Id`)
- ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-DROP TABLE IF EXISTS `student`;
-CREATE TABLE `student` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `Grade` int(11) NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  `Gender` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-
-DROP TABLE IF EXISTS `teacher`;
-CREATE TABLE `teacher` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(10) NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  `Gender` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
-
-
-"""
-    print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script)}")
+    merge('branch1', 'branch2')
