@@ -145,8 +145,9 @@ def log():
         globals.vc_cursor.execute(f"USE {globals.vcdb_name};")
         globals.vc_cursor.execute(f"select name, version, time, uid, msg from branch, commit where branch.bid = commit.bid and commit.bid = '{globals.current_bid}';")
         result = globals.vc_cursor.fetchall()
-        current_branch_name = result
-        globals.current_branch_name = current_branch_name
+        # current_branch_name = result
+        # print(current_branch_name)
+        # globals.current_branch_name = current_branch_name
         print("===============")
         print(result)
         print("Log Successfully.")

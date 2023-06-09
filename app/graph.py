@@ -105,6 +105,6 @@ def draw_git_graph():
 
 
 
-if __name__ == '__main__':
-    # Example usage
-    draw_git_graph()
+# if __name__ == '__main__':
+#     # Example usage
+#     draw_git_graph()

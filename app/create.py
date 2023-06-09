@@ -24,13 +24,17 @@ def create():
         globals.vc_cursor = vc_cursor
         vc_cursor.execute(f"USE {globals.vcdb_name};")
 
+        globals.vc_cursor.execute("SET foreign_key_checks = 0")
 
         # creating tables for vcdb: branch, commit, user, merge
         creating_table = '''CREATE TABLE IF NOT EXISTS branch(
             bid int not null AUTO_INCREMENT,
             name varchar(125) not null,
             tail varchar(500),
-            PRIMARY KEY (bid));'''
+            PRIMARY KEY (bid),
+            CONSTRAINT FK_BranchCommit FOREIGN KEY (tail)
+            REFERENCES commit(version)
+            ON DELETE SET NULL);'''
         vc_cursor.execute(creating_table)
         vc_connect.commit()
         vc_cursor.execute(f"INSERT INTO branch (name) VALUES ('main');")
