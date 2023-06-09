@@ -197,6 +197,7 @@ def get_branch_tail_version(branch_name):
     query = "SELECT name, tail FROM branch WHERE name = (%s);"
     globals.vc_cursor.execute(query, (branch_name, ))
     branch_existed = globals.vc_cursor.fetchall()
+    globals.vc_connect.commit()
     if not branch_existed:
         return None
     else:
@@ -257,7 +258,7 @@ def update_userdb_schema(main_branch_name, sql_script):
     try:
         for table in existed_tables:
             globals.user_cursor.execute(f"DROP TABLE {table[0]};")
-        globals.user_connect.commit()
+            globals.user_connect.commit()
     except Exception as e:
         return False, f"When updating userdb schema, drop all tables failed.\nError: {e} "
     
@@ -271,8 +272,13 @@ def update_userdb_schema(main_branch_name, sql_script):
                 globals.user_connect.commit()
             except Exception as e:
                 # Create original schema
+                
                 main_branch_tail_schema = read_sql_file(f"./branch_tail_schema/{main_branch_name}.sql")
-                globals.user_cursor.execute(main_branch_tail_schema)
+                main_branch_list = sql_script_into_list(main_branch_tail_schema)
+                for main_script in main_branch_list:
+                    if main_script:
+                        globals.user_cursor.execute(main_script)
+                        globals.user_connect.commit()
                 return False, f"Error: {e}", sql_script
     globals.user_cursor.execute("SET foreign_key_checks = 1;")
     return True, "Successfully updated userdb schema!"
@@ -313,18 +319,18 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
 # TEST
 if __name__ == '__main__':
     # merge('branch1', 'branch2')
-    fixed_sql_script = """
+    fixed_sql_script_1 = """
 
 CREATE TABLE `course` (
   `Id` varchar(10) NOT NULL,
   `Name` varchar(20) NOT NULL,
   `TeacherID` varchar(20) NOT NULL,
+  `TeacherID` varchar(20) NOT NULL,
   KEY fk_teach (`TeacherID`),
-  CONSTRAINT fk_teach FOREIGN KEY (`TeacherID`) REFERENCES teacher (`Id`)
- ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT fk_teach FOREIGN KEY (`TeacherID`) REFERENCES teacher (`Id`));
 
 
-DROP TABLE IF EXISTS `student`;
+
 CREATE TABLE `student` (
   `Id` varchar(20) NOT NULL,
   `Name` varchar(20) NOT NULL,
@@ -332,17 +338,51 @@ CREATE TABLE `student` (
   `Department` varchar(20) NOT NULL,
   `Gender` varchar(20) NOT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+);
 
-DROP TABLE IF EXISTS `teacher`;
+
 CREATE TABLE `teacher` (
   `Id` varchar(20) NOT NULL,
   `Name` varchar(10) NOT NULL,
   `Department` varchar(20) NOT NULL,
   `Gender` varchar(20) NOT NULL,
   PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+);
 
 
 """
-    print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script)}")
+    fixed_sql_script_2 = """
+
+
+
+
+
+CREATE TABLE `student` (
+  `Id` varchar(20) NOT NULL,
+  `Name` varchar(20) NOT NULL,
+  `Grade` int(11) NOT NULL,
+  `Department` varchar(20) NOT NULL,
+  `Gender` varchar(20) NOT NULL,
+  PRIMARY KEY (`Id`)
+);
+
+
+CREATE TABLE `teacher` (
+  `Id` varchar(20) NOT NULL,
+  `Name` varchar(10) NOT NULL,
+  `Department` varchar(20) NOT NULL,
+  `Gender` varchar(20) NOT NULL,
+  PRIMARY KEY (`Id`)
+);
+
+CREATE TABLE `course` (
+  `Id` varchar(10) NOT NULL,
+  `Name` varchar(20) NOT NULL,
+  `TeacherID` varchar(20) NOT NULL,
+  KEY fk_teach (`TeacherID`),
+  CONSTRAINT fk_teach FOREIGN KEY (`TeacherID`) REFERENCES teacher (`Id`));
+
+
+"""
+    print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script_1)}")
+    print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script_2)}")
