@@ -244,7 +244,7 @@ class LoginPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:', font=("sans-serif", 15), justify='center')
         pwd_label.grid(row=4, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*')
-        # pwd_entry.insert(0, '')
+        pwd_entry.insert(0, 'tubecity0212E_')
         pwd_entry.grid(row=4, column=1)
 
         host_label = tk.Label(self, text='Host:', font=("sans-serif", 15), justify='center')
@@ -540,7 +540,7 @@ class MergePage(tk.Frame):
                 print(main_bname, target_bname)
                 messagebox.showinfo('Merge', conflict_msg)
             else:
-                messagebox.showinfo('Merge', 'Merge good')
+                messagebox.showinfo('Merge', conflict_msg)
         except:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -579,13 +579,13 @@ class CheckoutPage(tk.Frame):
         options = ["Yes", "No"]
         self.isNewBranchOrNot = tk.StringVar()
         self.isNewBranchOrNot.set(options[0])
-        isNewBranchOrNot_label = tk.Label(self, text='isNewBranchOrNot:', font=("sans-serif", 15))
+        isNewBranchOrNot_label = tk.Label(self, text='Create New Branch?:', font=("sans-serif", 15))
         isNewBranchOrNot_label.grid(row=1, column=0, sticky='e')
         option_menu = tk.OptionMenu(self, self.isNewBranchOrNot, *options)
         option_menu.config(width=16)
         option_menu.grid(row=1, column=1)
         
-        newBranchName_label = tk.Label(self, text='newBranchName:', font=("sans-serif", 15))
+        newBranchName_label = tk.Label(self, text='New Branch Name:', font=("sans-serif", 15))
         newBranchName_label.grid(row=5, column=0, sticky='e')
         newBranchName_entry = tk.Entry(self, textvariable=newBranchName)
         newBranchName_entry.grid(row=5, column=1)
@@ -619,10 +619,10 @@ class CheckoutPage(tk.Frame):
 
         
 
-
     def app_checkout(self, newBranchName, isNewBranchOrNot):
+        new_ischeckout = self.isNewBranchOrNot.get()
         return_msg = checkout.checkout(
-            newBranchName, isNewBranchOrNot
+            newBranchName, new_ischeckout
         )
         messagebox.showinfo('Checkout Result:', f"{return_msg}")
     

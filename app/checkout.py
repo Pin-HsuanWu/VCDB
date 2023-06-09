@@ -62,8 +62,8 @@ def checkout(newBranchName, isNewBranchOrNot):
             # delete tmp file
             os.remove(f"./branch_tail_schema/{fileName}")
             
-            # update global variables: current_bid
-            globals.current_bid = newBranchID
+            
+
 
             # update vcdb user table: current_bid, current_version 
             globals.vc_cursor.execute(f"use {globals.vcdb_name};")
@@ -79,6 +79,11 @@ def checkout(newBranchName, isNewBranchOrNot):
             query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
             globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
             globals.vc_connect.commit()
+
+            # update global variables: current_bid
+            print("========== checkout ==========")
+            print(newBranchID)
+            globals.current_bid = newBranchID
 
         else: #仿照 main branch狀況 
             # error check: whether the specified branch name exists in the branchname list
@@ -125,6 +130,8 @@ def checkout(newBranchName, isNewBranchOrNot):
             # checking out to a new branch, commit current user schema, so the newBranch can be linked to the old branch
             commit.commit(f"Checkout new branch {newBranchName} from old branch {currentBranchName}")
 
+        globals.current_bid = newBranchID
+        globals.current_branch_name = newBranchName
 
         #print success message
         print(f"Successfully checked out to branch {newBranchName}.")
