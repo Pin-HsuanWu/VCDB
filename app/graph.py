@@ -1,4 +1,4 @@
-from globals import vc_cursor
+import globals
 import tkinter as tk
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -7,8 +7,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def get_commits_by_bid(bid):
     query = f"SELECT version, last_version, time FROM commit WHERE bid = {bid}"
-    vc_cursor.execute(query)
-    commits = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    commits = globals.vc_cursor.fetchall()
     sorted_commit_list = sorted(commits, key=lambda x: x[2], reverse=True)
     sorted_commit_list = [(x[0], x[1]) for x in sorted_commit_list]
     return sorted_commit_list
@@ -30,14 +30,14 @@ def get_commits_by_bid(bid):
 def draw_branch_graph(branch_info, graph, all_commit_list):
     # Get bid and tail from branch_info
     bid = branch_info[0]
-    tail = branch_info[2]
+    branch_name = branch_info[1]
 
     # Get sorted commit list from bid
     sorted_commit_list = get_commits_by_bid(bid)
 
     for commit in sorted_commit_list:
         # print(commit.get)
-        graph.add_node(commit[0], subset=bid, pos=(bid, all_commit_list.index(commit[0])*2))
+        graph.add_node(commit[0], subset=branch_name, pos=(bid, all_commit_list.index(commit[0])*2))
         if commit[1]:
             graph.add_edge(commit[0], commit[1])
 
@@ -46,13 +46,13 @@ def draw_branch_graph(branch_info, graph, all_commit_list):
 def draw_git_graph():
     # Get all branch
     query = "SELECT * FROM branch"
-    vc_cursor.execute(query)
-    branch_list = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    branch_list = globals.vc_cursor.fetchall()
 
     # Get all commit
     query = "SELECT version FROM commit ORDER BY time"
-    vc_cursor.execute(query)
-    all_commit_list = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    all_commit_list = globals.vc_cursor.fetchall()
     all_commit_list = [x[0] for x in all_commit_list]
 
     # Create a directed graph
@@ -64,15 +64,27 @@ def draw_git_graph():
 
     # Get merge info
     query = "SELECT * FROM merge"
-    vc_cursor.execute(query)
-    merge_list = vc_cursor.fetchall()
+    globals.vc_cursor.execute(query)
+    merge_list = globals.vc_cursor.fetchall()
     for merge in merge_list:
         graph.add_edge(merge[0], merge[2])
 
+    # Get unique subsets from the graph
+    subsets = set(nx.get_node_attributes(graph, 'subset').values())
+
+    # Generate a unique color for each subset
+    subset_colors = {}
+    for i, subset in enumerate(subsets):
+        subset_colors[subset] = f'C{i}'
+
+    # Get the subset attribute for each node and assign the corresponding color
+    node_colors = [subset_colors[graph.nodes[node]['subset']] for node in graph.nodes]
+
+    # Draw Graph
     pos = nx.get_node_attributes(graph,'pos')
 
     # Draw the nodes
-    nx.draw_networkx_nodes(graph, pos, node_color='lightblue', alpha=0.7)
+    nx.draw_networkx_nodes(graph, pos, node_color=node_colors, alpha=0.7)
     nx.draw_networkx_edges(graph, pos)
 
     # Draw the labels
@@ -80,6 +92,12 @@ def draw_git_graph():
     
     # Set the plot title
     plt.title('Version Control Graph')
+
+    # Create a legend for subsets and their colors
+    legend_handles = []
+    for subset, color in subset_colors.items():
+        legend_handles.append(plt.Line2D([], [], marker='o', markersize=10, color=color, label=subset))
+    plt.legend(handles=legend_handles)
 
     # Show the graph
     plt.axis('off')
