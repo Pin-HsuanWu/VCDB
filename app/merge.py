@@ -143,54 +143,6 @@ def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name
     # Failed to update userdb
     else:
         return update_result
-
-
-    """
-    # Merged schema
-    downgrade = generate_sql_diff(main_schema_dict, merged_schema_dict)
-    upgrade = generate_sql_diff(merged_schema_dict, main_schema_dict)
-
-    # msg = f"Merge {target_branch_name} into {main_branch_name}"
-    merged_version = str(uuid.uuid4())[:8]
-
-    # Get branch info
-    query = f"SELECT * FROM branch WHERE tail = '{main_tail_version}'"
-    globals.vc_cursor.execute(query)
-    main_branch_info = globals.vc_cursor.fetchall()[0]
-    if not main_branch_info:
-        return is_merged, "No such branch with this tail version!"
-    last_version = main_branch_info[2]
-    main_branch_id = main_branch_info[0]
-    msg = f"Merge {target_tail_version} into {main_tail_version}"
-
-
-    #### 只留merge table 其他call commit->要拿最新版
-
-    # Insert into commit table
-    insert = "INSERT INTO commit (version, bid, last_version, upgrade, downgrade, time, uid, msg) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    val = (merged_version, main_branch_id, last_version, upgrade, downgrade, datetime.datetime.now(), globals.current_uid, msg)
-    globals.vc_cursor.execute(insert, val)
-
-    # Update branch table
-    update = "UPDATE branch SET tail = %s WHERE bid = %s;"
-    val = (merged_version, main_branch_id)
-    globals.vc_cursor.execute(update, val)
-
-    # Insert into merge table
-    insert = "INSERT INTO merge (merged_version, main_branch_version, target_branch_version) VALUES (%s, %s, %s)"
-    val = (merged_version, main_tail_version, target_tail_version)
-    globals.vc_cursor.execute(insert, val)
-
-    # Update user table
-    update = "UPDATE user SET current_version = %s, current_bid = %s WHERE uid = %s;"
-    val = (merged_version, main_branch_id, globals.current_uid)
-    globals.vc_cursor.execute(update, val)
-
-    globals.vc_connect.commit()
-    """
-    print(f"Successfully merged {target_tail_version} into {main_tail_version}!")
-    is_merged = True
-    return is_merged, f"Successfully merged {target_tail_version} into {main_tail_version}!"
     
 
 def get_branch_tail_version(branch_name):
@@ -316,70 +268,6 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
     else:
         return is_merged, update_result[1], update_result[2]
 
-# TEST
+
 if __name__ == '__main__':
-    # merge('branch1', 'branch2')
-    fixed_sql_script_1 = """
-
-CREATE TABLE `course` (
-  `Id` varchar(10) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `TeacherID` varchar(20) NOT NULL,
-  `TeacherID` varchar(20) NOT NULL,
-  KEY fk_teach (`TeacherID`),
-  CONSTRAINT fk_teach FOREIGN KEY (`TeacherID`) REFERENCES teacher (`Id`));
-
-
-
-CREATE TABLE `student` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `Grade` int(11) NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  `Gender` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-);
-
-
-CREATE TABLE `teacher` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(10) NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  `Gender` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-);
-
-
-"""
-    fixed_sql_script_2 = """
-
-CREATE TABLE `course` (
-  `Id` varchar(10) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `TeacherID` varchar(20) NOT NULL,
-  KEY `fk_teach` (`TeacherID`),
-  CONSTRAINT `fk_teach` FOREIGN KEY (`TeacherID`) REFERENCES `teacher` (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-CREATE TABLE `student` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(20) NOT NULL,
-  `Grade` int NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  `Gender` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-CREATE TABLE `teacher` (
-  `Id` varchar(20) NOT NULL,
-  `Name` varchar(10) NOT NULL,
-  `Department` varchar(20) NOT NULL,
-  `Gender` varchar(20) NOT NULL,
-  PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-"""
-    print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script_1)}")
-    print(f"merge_after_conflict_fixed: {merge_after_conflict_fixed('branch1', 'branch2', fixed_sql_script_2)}")
+    merge('branch1', 'branch2')
