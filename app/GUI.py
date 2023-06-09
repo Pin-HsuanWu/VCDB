@@ -37,6 +37,9 @@ class MyApp(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        self.iconbitmap('./image/version-control.ico')
+
+
         self.frames = {}
 
         menu = tk.Menu(container)
