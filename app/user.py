@@ -138,6 +138,23 @@ def login(user, pwd, host,  database_name, user_name, user_email):
         # print(e)
         return "Login fails."
 
+def log():
+    try:
+        print("=============== into log function ==============")
+        print(globals.vc_cursor)
+        globals.vc_cursor.execute("USE vcdb;")
+        globals.vc_cursor.execute(f"select name, version, time, uid, msg from branch, commit where branch.bid = commit.bid and commit.bid = '{globals.current_bid}';")
+        result = globals.vc_cursor.fetchall()
+        current_branch_name = result
+        globals.current_branch_name = current_branch_name
+        print("===============")
+        print(result)
+        print("Log Successfully.")
+        return result
+    
+    except Exception as e:
+        return("Log error: ",e)
+
 def getBnameFromBid():
     try:
         print("=============== into getBnameFromBid function ==============")

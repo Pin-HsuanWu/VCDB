@@ -51,6 +51,9 @@ class MyApp(tk.Tk):
             label="commit", command=lambda: self.show_frame(CommitPage)
         )
         command_menu.add_command(
+            label="log", command=lambda: self.show_frame(LogPage)
+        )
+        command_menu.add_command(
             label="merge", command=lambda: self.show_frame(MergePage)
         )
         command_menu.add_command(
@@ -60,7 +63,7 @@ class MyApp(tk.Tk):
             label="hop", command=lambda: self.show_frame(HopPage)
         )
 
-        for F in (StartPage, InitPage, RegisterPage, LoginPage, CommitPage, MergePage, CheckoutPage, HopPage):
+        for F in (StartPage, InitPage, RegisterPage, LoginPage, CommitPage, LogPage, MergePage, CheckoutPage, HopPage):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -373,6 +376,52 @@ class CommitPage(tk.Frame):
             messagebox.showinfo('Commit', "Commit successfully.")
         else:
             messagebox.showinfo('Commit', "Cannot Commit.")
+
+
+# After login show the page below
+class LogPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        label = tk.Label(self, text="Log")
+        label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+
+        self.log_tree = ttk.Treeview(self, show="headings")
+        self.log_tree["columns"] = ("Branch Name", "Version", "Time", "UID", "Message")
+        self.log_tree.heading("Branch Name", text="Branch Name")
+        self.log_tree.heading("Version", text="Version")
+        self.log_tree.heading("Time", text="Time")
+        self.log_tree.heading("UID", text="UID")
+        self.log_tree.heading("Message", text="Message")
+        self.log_tree.tag_configure("center", anchor='center')
+        self.log_tree.grid(row=1, column=0, columnspan=2, padx=10, pady=10)
+
+        log_button = tk.Button(
+            self,
+            text='Log Commit',
+            command=self.log_commit,
+        )
+        log_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+    def log_commit(self):
+        try:
+            result = user.log()
+            self.populate_log_tree(result)
+            messagebox.showinfo('Log', "Log successfully.")
+        except Exception as e:
+            print(e)
+            messagebox.showinfo('Log', e)
+
+    def populate_log_tree(self, result):
+        self.log_tree.delete(*self.log_tree.get_children())
+        for row in result:
+            bname = row[0]
+            version = row[1]
+            time = row[2]
+            uid = row[3]
+            message = row[4]
+            self.log_tree.insert("", tk.END, values=(bname, version, time, uid, message), tags=("center",))
 
 
 class MergePage(tk.Frame):
