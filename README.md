@@ -1,5 +1,11 @@
 # DBMS-VersionControl
 
+## 開發使用
+1. 安裝 XQuartz (macos)、Xming (windows): 使terminal可以連接到X11服務器軟體
+2. run docker
+- docker-compose up
+
+## 實際運作
 1. construct virtual venv (macos)
 - python -m venv venv
 - source venv/bin/activate
@@ -10,4 +16,4 @@
 3. run app
 - python3 ./app/GUI.py
 
-4. 參考demo file "testCase_record.txt", 測試GUI上的每個功能（debug後測試都可以work）
+4. 參考 "testCase_record.txt" 測試功能
