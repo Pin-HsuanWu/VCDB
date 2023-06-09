@@ -23,12 +23,18 @@ def checkout(newBranchName, isNewBranchOrNot):
     query = f"SELECT current_bid FROM {globals.vcdb_name}.user where uid = %s;"
     globals.vc_cursor.execute(query, [globals.current_uid])
     currentBranchID = globals.vc_cursor.fetchone()[0]
+    
 
     # store current branche name
-    query = f"SELECT name FROM {globals.vcdb_name}.branch where bid = {currentBranchID};"
+    query = f"SELECT * FROM {globals.vcdb_name}.branch where bid = {currentBranchID};"
     globals.vc_cursor.execute(query)
-    currentBranchName = globals.vc_cursor.fetchone()[0]
-
+    # print(f'branch result: {globals.vc_cursor.fetchone()}')
+    branchInfo = globals.vc_cursor.fetchone()
+    print(f'branchInfo: {branchInfo}')
+    currentBranchName = branchInfo[1]
+    currentVersion = branchInfo[2]
+    print(f'currentBranchName: {currentBranchName}, currentVersion: {currentVersion}')
+    print
     try:
         if isNewBranchOrNot == "No":
             # error check: whether the specified branch name exists in the branchname list
@@ -128,7 +134,12 @@ def checkout(newBranchName, isNewBranchOrNot):
             globals.vc_connect.commit()
 
             # checking out to a new branch, commit current user schema, so the newBranch can be linked to the old branch
-            commit.commit(f"Checkout new branch {newBranchName} from old branch {currentBranchName}")
+            newBranchVersion = commit.commit(f"Checkout new branch {newBranchName} from old branch {currentBranchName}")
+            alter_last_version = "UPDATE commit SET last_version = %s WHERE version = %s"
+            print(f'current version: {currentVersion}, newBranchVersion: {newBranchVersion}')
+            globals.vc_cursor.execute(alter_last_version, [currentVersion, newBranchVersion])
+            globals.vc_connect.commit()
+
 
         globals.current_bid = newBranchID
         globals.current_branch_name = newBranchName

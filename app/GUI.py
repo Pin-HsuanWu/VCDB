@@ -244,7 +244,7 @@ class LoginPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:', font=("sans-serif", 15), justify='center')
         pwd_label.grid(row=4, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*')
-        pwd_entry.insert(0, 'tubecity0212E_')
+        pwd_entry.insert(0, 'dbcourse')
         pwd_entry.grid(row=4, column=1)
 
         host_label = tk.Label(self, text='Host:', font=("sans-serif", 15), justify='center')
@@ -637,6 +637,21 @@ class HopPage(tk.Frame):
         label = tk.Label(self, text="Hop", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
+        current_version_label_var = tk.StringVar()
+         #main branch
+        current_version_label = tk.Label(self, text='Current Version', font=("sans-serif", 15), justify='center')
+        current_version_label.grid(row=1, column=0, sticky='e')
+        self.current_version_label_entry = tk.Entry(self, textvariable=current_version_label_var )
+        self.current_version_label_entry.grid(row=1, column=1)
+        get_version_button = tk.Button(
+            self,
+            text='Get Current Version',
+            command=lambda: self.get_current_version(),
+        )
+        get_version_button.grid(row=1, column=4, columnspan=2, pady=10)
+
+        
+
         # destination = tk.StringVar()
         # destination_label = tk.Label(self, text='destination:', font=("sans-serif", 15), justify='center')
         # destination_label.grid(row=1, column=0, sticky='e')
@@ -652,19 +667,20 @@ class HopPage(tk.Frame):
         # option_menu.config(width=16)
         # option_menu.grid(row=2, column=1)
 
-        parse_button = tk.Button(
-            self,
-            text='Get All Versions of Current Branch',
-            command=lambda: self.getAllVersions(),
-        )
-        parse_button.grid(row=7, column=0, columnspan=2, pady=10)
+        # parse_button = tk.Button(
+        #     self,
+        #     text='Get All Versions of Current Branch',
+        #     command=lambda: self.getAllVersions(),
+        # )
+        # parse_button.grid(row=7, column=0, columnspan=2, pady=10)
 
-        self.destination_list = tk.Text(self, height=5, width=40)
-        self.destination_list.grid(row=8, column=1)
-
+        # self.destination_list = tk.Text(self, height=5, width=40)
+        # self.destination_list.grid(row=8, column=1)
+        destination_label = tk.Label(self, text='Destination', font=("sans-serif", 15), justify='center')
+        destination_label.grid(row=2, column=0, sticky='e')
         destination = tk.StringVar()
         destination_entry = tk.Entry(self, textvariable=destination)
-        destination_entry.grid(row=9, column=1)
+        destination_entry.grid(row=2, column=1)
 
         parse_button = tk.Button(
             self,
@@ -675,18 +691,28 @@ class HopPage(tk.Frame):
         )
         parse_button.grid(row=10, column=0, columnspan=2, pady=10)
 
+    def getCurrentVersion(self):
+        
+        return
 
-    def getAllVersions(self):
-        result = utils.getCurrentBranchAllVersionsExceptCurrent()
-        if len(result) == 0:
-            messagebox.showinfo('Hop Result:', "Do not have more versions to hop")
-        else:
-            self.destination_list.delete(1.0, tk.END)  # Clear previous content
-            self.destination_list.insert(1.0, result)
+    # def getAllVersions(self):
+    #     result = utils.getCurrentBranchAllVersionsExceptCurrent()
+    #     if len(result) == 0:
+    #         messagebox.showinfo('Hop Result:', "Do not have more versions to hop")
+    #     else:
+    #         self.destination_list.delete(1.0, tk.END)  # Clear previous content
+    #         self.destination_list.insert(1.0, result)
     
     def hopping(self, destination):
         return_msg = hop.hop(destination)
         messagebox.showinfo('Hop Result:', return_msg)
+
+    def get_current_version(self):
+        # Retrieve the current branch using your implementation
+
+        # Update the merge_main_entry widget with the current branch
+        self.current_version_label_entry.delete(0, tk.END)  # Clear previous content
+        self.current_version_label_entry.insert(0, str(globals.current_version))
 
 
 app = MyApp()

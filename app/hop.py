@@ -102,8 +102,10 @@ def hop(destination):
                 if len(statement.strip()) > 0:
                     globals.user_cursor.execute(statement + ';')
 
+            globals.current_version = destination
             print("Successfully hop and you hop", hopCount, "commit(s)!")
-            return "Successfully hop and you hop", hopCount, "commit(s)!"
+            msg = "Successfully hop to"+str({globals.current_version})
+            return msg
             
         else:
             print('Cannot find the destination because it is not on the same branch!')
