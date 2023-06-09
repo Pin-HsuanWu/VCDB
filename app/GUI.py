@@ -9,6 +9,7 @@ import checkout
 import hop
 import sys
 import os
+import utils
 
 # if os.environ.get('DISPLAY','') == '':
 #     print('no display found. Using :0.0')
@@ -29,8 +30,8 @@ class MyApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         container = tk.Frame(self)
-
-        container.pack(side="top", fill="both", expand=True)
+        container.grid(row=0, column=0, sticky="nsew")
+        #container.pack(side="top", fill="both", expand=True)
 
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -82,7 +83,8 @@ class MyApp(tk.Tk):
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Welcome to DBVC system")
+        label = tk.Label(self, text="Welcome to DBVC system", font=("sans-serif", 30))
+        label.pack(fill='both', expand=True)
         label.pack(pady=10, padx=10)
 
 
@@ -91,7 +93,9 @@ class InitPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Init")
+        self.grid(row=0, column=0, sticky="nsew")  # Set grid layout for InitPage frame
+
+        label = tk.Label(self, text="Init", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
         user_var = tk.StringVar()
@@ -100,35 +104,34 @@ class InitPage(tk.Frame):
         port_var = tk.StringVar()
         userDB_var = tk.StringVar()
 
-        user_label = tk.Label(self, text='User:')
+        user_label = tk.Label(self, text='User:', font=("sans-serif", 15), justify='center')
         user_label.grid(row=1, column=0, sticky='e')
-        user_entry = tk.Entry(self, textvariable=user_var)
+        user_entry = tk.Entry(self, textvariable=user_var, width=25)
         user_entry.insert(0, 'root')
         user_entry.grid(row=1, column=1)
 
-        pwd_label = tk.Label(self, text='Password:')
+        pwd_label = tk.Label(self, text='Password:', font=("sans-serif", 15), justify='center')
         pwd_label.grid(row=2, column=0, sticky='e')
-        pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*')
-        # pwd_entry.insert(0, '')
+        pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*', width=25)
         pwd_entry.grid(row=2, column=1)
 
-        host_label = tk.Label(self, text='Host:')
+        host_label = tk.Label(self, text='Host:', font=("sans-serif", 15), justify='center')
         host_label.grid(row=3, column=0, sticky='e')
-        host_entry = tk.Entry(self, textvariable=host_var)
+        host_entry = tk.Entry(self, textvariable=host_var, width=25)
         host_entry.insert(0, '127.0.0.1')
         host_entry.grid(row=3, column=1)
 
-        port_label = tk.Label(self, text='Port:')
+        port_label = tk.Label(self, text='Port:', font=("sans-serif", 15), justify='center')
         port_label.grid(row=4, column=0, sticky='e')
-        port_entry = tk.Entry(self, textvariable=port_var)
+        port_entry = tk.Entry(self, textvariable=port_var, width=25)
         port_entry.insert(0, '3306')
         port_entry.grid(row=4, column=1)
 
-        userDB_label = tk.Label(self, text='DB Name:')
-        userDB_label.grid(row=4, column=0, sticky='e')
-        userDB_entry = tk.Entry(self, textvariable=userDB_var)
+        userDB_label = tk.Label(self, text='DB Name:', font=("sans-serif", 15), justify='center')
+        userDB_label.grid(row=5, column=0, sticky='e')
+        userDB_entry = tk.Entry(self, textvariable=userDB_var, width=25)
         userDB_entry.insert(0, 'userdb')
-        userDB_entry.grid(row=4, column=1)
+        userDB_entry.grid(row=5, column=1)
 
         parse_button = tk.Button(
             self,
@@ -137,13 +140,12 @@ class InitPage(tk.Frame):
                 user_var.get(), pwd_var.get(), host_var.get(), port_var.get(), userDB_var.get()
             ),
         )
-        parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+        parse_button.grid(row=6, column=0, columnspan=2, pady=10)
 
     def init_database(self, db_user, pwd, host, port, user_db):
         return_msg = user.init(
             db_user, pwd, host, port, user_db
         )
-        # print("vc_connect: ",vc_connect, "vc_cursor: ", vc_cursor, "user_connect: ", user_connect, "user_cursor: ",user_cursor)
         print("======================================")
         print("check global variables: user_connect, user_cursor, user_host, userdb_name, user_name, vc_connect, vc_cursor, ")
         print(globals.user_connect, globals.user_cursor, globals.user_host,
@@ -157,19 +159,19 @@ class RegisterPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Register")
+        label = tk.Label(self, text="Register", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
         name_var = tk.StringVar()
         email_var = tk.StringVar()
 
-        name_label = tk.Label(self, text='User Name:')
+        name_label = tk.Label(self, text='User Name:', font=("sans-serif", 15), justify='center')
         name_label.grid(row=1, column=0, sticky='e')
         name_entry = tk.Entry(self, textvariable=name_var)
         name_entry.grid(row=1, column=1)
         name_entry.insert(0, 'Leo')
 
-        email_label = tk.Label(self, text='User Email:')
+        email_label = tk.Label(self, text='User Email:', font=("sans-serif", 15), justify='center')
         email_label.grid(row=2, column=0, sticky='e')
         email_entry = tk.Entry(self, textvariable=email_var)
         email_entry.grid(row=2, column=1)
@@ -206,19 +208,19 @@ class LoginPage(tk.Frame):
 
         self.frames = {}
 
-        label = tk.Label(self, text="Login")
+        label = tk.Label(self, text="Login", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
         name_var = tk.StringVar()
         email_var = tk.StringVar()
 
-        name_label = tk.Label(self, text='User Name:')
+        name_label = tk.Label(self, text='User Name:', font=("sans-serif", 15), justify='center')
         name_label.grid(row=1, column=0, sticky='e')
         name_entry = tk.Entry(self, textvariable=name_var)
         name_entry.insert(0, 'Leo')
         name_entry.grid(row=1, column=1)
 
-        email_label = tk.Label(self, text='User Email:')
+        email_label = tk.Label(self, text='User Email:', font=("sans-serif", 15), justify='center')
         email_label.grid(row=2, column=0, sticky='e')
         email_entry = tk.Entry(self, textvariable=email_var)
         email_entry.insert(0, 'Leo@gmail.com')
@@ -229,25 +231,25 @@ class LoginPage(tk.Frame):
         host_var = tk.StringVar()
         userDB_var = tk.StringVar()
 
-        user_label = tk.Label(self, text='User:')
+        user_label = tk.Label(self, text='User:', font=("sans-serif", 15), justify='center')
         user_label.grid(row=3, column=0, sticky='e')
         user_entry = tk.Entry(self, textvariable=user_var)
         user_entry.insert(0, 'root')
         user_entry.grid(row=3, column=1)
 
-        pwd_label = tk.Label(self, text='Password:')
+        pwd_label = tk.Label(self, text='Password:', font=("sans-serif", 15), justify='center')
         pwd_label.grid(row=4, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*')
         # pwd_entry.insert(0, '')
         pwd_entry.grid(row=4, column=1)
 
-        host_label = tk.Label(self, text='Host:')
+        host_label = tk.Label(self, text='Host:', font=("sans-serif", 15), justify='center')
         host_label.grid(row=5, column=0, sticky='e')
         host_entry = tk.Entry(self, textvariable=host_var)
         host_entry.insert(0, '127.0.0.1')
         host_entry.grid(row=5, column=1)
 
-        userDB_label = tk.Label(self, text='DB Name:')
+        userDB_label = tk.Label(self, text='DB Name:', font=("sans-serif", 15), justify='center')
         userDB_label.grid(row=6, column=0, sticky='e')
         userDB_entry = tk.Entry(self, textvariable=userDB_var)
         userDB_entry.insert(0, 'userdb')
@@ -343,12 +345,12 @@ class CommitPage(tk.Frame):
 
         self.frames = {}
 
-        label = tk.Label(self, text="Commit")
+        label = tk.Label(self, text="Commit", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
         commit_var = tk.StringVar()
 
-        commit_label = tk.Label(self, text='Commit Message:')
+        commit_label = tk.Label(self, text='Commit Message:', font=("sans-serif", 15), justify='center')
         commit_label.grid(row=1, column=0, sticky='e')
         commit_entry = tk.Entry(self, textvariable=commit_var)
         commit_entry.insert(0, 'Enter your commit message')
@@ -388,7 +390,7 @@ class LogPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Log")
+        label = tk.Label(self, text="Log", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
         self.log_tree = ttk.Treeview(self, show="headings")
@@ -435,37 +437,30 @@ class MergePage(tk.Frame):
 
         self.frames = {}
 
-        label = tk.Label(self, text="Merge")
+        label = tk.Label(self, text="Merge", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
         merge_main_var = tk.StringVar()
         merge_target_var = tk.StringVar()
         self.fixed_sql_script_var = tk.StringVar()
 
-        # target branch
-        merge_target_label = tk.Label(self, text='Merge Branch from')
-        merge_target_label.grid(row=1, column=0, sticky='e')
-        merge_target_entry = tk.Entry(self, textvariable=merge_target_var)
-        merge_target_entry.grid(row=1, column=1)
-
         #main branch
-        merge_main_label = tk.Label(self, text='To:')
-        merge_main_label.grid(row=2, column=0, sticky='e')
+        merge_main_label = tk.Label(self, text='Main Branch', font=("sans-serif", 15), justify='center')
+        merge_main_label.grid(row=1, column=0, sticky='e')
         self.merge_main_entry = tk.Entry(self, textvariable=merge_main_var )
-        self.merge_main_entry.grid(row=2, column=1)
+        self.merge_main_entry.grid(row=1, column=1)
         get_branch_button = tk.Button(
             self,
-            text='Get Current Branch',
+            text='Get Main Branch Name',
             command=lambda: self.get_current_branch(),
         )
-        get_branch_button.grid(row=3, column=0, columnspan=2, pady=10)
+        get_branch_button.grid(row=1, column=4, columnspan=2, pady=10)
 
-
-        merge_conflict_label = tk.Label(self, text='Merge Conflict:')
-        merge_conflict_label.grid(row=4, column=0, sticky='e')
-        self.conflict_text_entry = tk.Text(self, height=30, width=50)
-        # self.conflict_text_entry = tk.Entry(self, textvariable=self.fixed_sql_script_var, height=30, width=50)
-        self.conflict_text_entry.grid(row=5, column=1, columnspan=2, pady=10)
+        # target branch
+        merge_target_label = tk.Label(self, text='Target Branch', font=("sans-serif", 15), justify='center')
+        merge_target_label.grid(row=2, column=0, sticky='e')
+        merge_target_entry = tk.Entry(self, textvariable=merge_target_var)
+        merge_target_entry.grid(row=2, column=1)
 
         merge_button = tk.Button(
             self,
@@ -474,7 +469,18 @@ class MergePage(tk.Frame):
                 merge_main_var.get(), merge_target_var.get()
             ),
         )
-        merge_button.grid(row=3, column=1, columnspan=2, pady=10)
+        merge_button.grid(row=3, column=3, columnspan=2, pady=10)
+
+        separator = ttk.Separator(self, orient="horizontal")
+        # separator.pack(fill="x", padx=10, pady=10)
+        separator.grid(row=4, columnspan=20, sticky="ew")
+
+        merge_conflict_label = tk.Label(self, text='Merge Conflict:', font=("sans-serif", 15), justify='center')
+        merge_conflict_label.grid(row=5, column=0, sticky='e')
+        self.conflict_text_entry = tk.Text(self, height=30, width=50)
+        # self.conflict_text_entry = tk.Entry(self, textvariable=self.fixed_sql_script_var, height=30, width=50)
+        self.conflict_text_entry.grid(row=6, column=1, columnspan=2, pady=10)
+
 
         conflict_button = tk.Button(
             self,
@@ -483,7 +489,7 @@ class MergePage(tk.Frame):
                 merge_main_var.get(), merge_target_var.get(), self.conflict_text_entry.get(1.0,tk.END)
             ),
         )
-        conflict_button.grid(row=6, column=0, columnspan=5, pady=10)
+        conflict_button.grid(row=7, column=0, columnspan=5, pady=10)
 
 
     def merge_GUI(self, main_bname, target_bname):
@@ -548,21 +554,38 @@ class CheckoutPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Checkout")
-        label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+        label = tk.Label(self, text="Checkout", font=("sans-serif", 25))
+        label.grid(row=0, column=1, columnspan=2, pady=10, padx=10)
 
         newBranchName = tk.StringVar()
         isNewBranchOrNot = tk.StringVar()
 
-        newBranchName_label = tk.Label(self, text='newBranchName:')
-        newBranchName_label.grid(row=1, column=0, sticky='e')
+        options = ["Yes", "No"]
+        self.isNewBranchOrNot = tk.StringVar()
+        self.isNewBranchOrNot.set(options[0])
+        isNewBranchOrNot_label = tk.Label(self, text='isNewBranchOrNot:', font=("sans-serif", 15))
+        isNewBranchOrNot_label.grid(row=1, column=0, sticky='e')
+        option_menu = tk.OptionMenu(self, self.isNewBranchOrNot, *options)
+        option_menu.config(width=16)
+        option_menu.grid(row=1, column=1)
+        
+        newBranchName_label = tk.Label(self, text='newBranchName:', font=("sans-serif", 15))
+        newBranchName_label.grid(row=5, column=0, sticky='e')
         newBranchName_entry = tk.Entry(self, textvariable=newBranchName)
-        newBranchName_entry.grid(row=1, column=1)
+        newBranchName_entry.grid(row=5, column=1)
 
-        isNewBranchOrNot_label = tk.Label(self, text='isNewBranchOrNot:')
-        isNewBranchOrNot_label.grid(row=2, column=0, sticky='e')
-        isNewBranchOrNot_entry = tk.Entry(self, textvariable=isNewBranchOrNot)
-        isNewBranchOrNot_entry.grid(row=2, column=1)
+        self.branch_list = tk.Text(self, height=5, width=30)
+        self.branch_list.grid(row=2, column=1, sticky='e')
+
+        parse_button = tk.Button(
+            self,
+            text='Get All Branches',
+            command=lambda: self.getAllBranches(),
+        )
+        parse_button.grid(row=2, column=2, columnspan=2, pady=10)
+
+        # isNewBranchOrNot_entry = tk.Entry(self, textvariable=isNewBranchOrNot)
+        # isNewBranchOrNot_entry.grid(row=2, column=1)
 
         parse_button = tk.Button(
             self,
@@ -571,13 +594,23 @@ class CheckoutPage(tk.Frame):
                 newBranchName.get(), isNewBranchOrNot.get()
             ),
         )
-        parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+        parse_button.grid(row=9, column=1, columnspan=2, pady=10)
+
+    def getAllBranches(self):
+        result = utils.getAllBranchExceptCurrent()
+        self.branch_list.delete(1.0, tk.END)  # Clear previous content
+        self.branch_list.insert(1.0, result)
+
+        
+
 
     def app_checkout(self, newBranchName, isNewBranchOrNot):
         return_msg = checkout.checkout(
             newBranchName, isNewBranchOrNot
         )
         messagebox.showinfo('Checkout Result:', f"{return_msg}")
+    
+    
 
 
 class HopPage(tk.Frame):
@@ -585,15 +618,37 @@ class HopPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Hop")
+        label = tk.Label(self, text="Hop", font=("sans-serif", 25), justify='center')
         label.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
 
-        destination = tk.StringVar()
+        # destination = tk.StringVar()
+        # destination_label = tk.Label(self, text='destination:', font=("sans-serif", 15), justify='center')
+        # destination_label.grid(row=1, column=0, sticky='e')
+        # destination_entry = tk.Entry(self, textvariable=destination)
+        # destination_entry.grid(row=1, column=1)
 
-        destination_label = tk.Label(self, text='destination:')
-        destination_label.grid(row=1, column=0, sticky='e')
+        # options = utils.getCurrentBranchAllVersionsExceptCurrent()
+        # destination = tk.StringVar()
+        # destination.set(options[0])
+        # destination_label = tk.Label(self, text='destination:', font=("sans-serif", 15), justify='center')
+        # destination_label.grid(row=2, column=0, sticky='e')
+        # option_menu = tk.OptionMenu(self, destination, *options)
+        # option_menu.config(width=16)
+        # option_menu.grid(row=2, column=1)
+
+        parse_button = tk.Button(
+            self,
+            text='Get All Versions of Current Branch',
+            command=lambda: self.getAllVersions(),
+        )
+        parse_button.grid(row=7, column=0, columnspan=2, pady=10)
+
+        self.destination_list = tk.Text(self, height=5, width=40)
+        self.destination_list.grid(row=8, column=1)
+
+        destination = tk.StringVar()
         destination_entry = tk.Entry(self, textvariable=destination)
-        destination_entry.grid(row=1, column=1)
+        destination_entry.grid(row=9, column=1)
 
         parse_button = tk.Button(
             self,
@@ -602,13 +657,22 @@ class HopPage(tk.Frame):
                 destination.get()
             ),
         )
-        parse_button.grid(row=5, column=0, columnspan=2, pady=10)
+        parse_button.grid(row=10, column=0, columnspan=2, pady=10)
 
+
+    def getAllVersions(self):
+        result = utils.getCurrentBranchAllVersionsExceptCurrent()
+        if len(result) == 0:
+            messagebox.showinfo('Hop Result:', "Do not have more versions to hop")
+        else:
+            self.destination_list.delete(1.0, tk.END)  # Clear previous content
+            self.destination_list.insert(1.0, result)
+    
     def hopping(self, destination):
         return_msg = hop.hop(destination)
         messagebox.showinfo('Hop Result:', return_msg)
 
 
 app = MyApp()
-app.geometry("800x600")
+app.geometry("1100x700")
 app.mainloop()

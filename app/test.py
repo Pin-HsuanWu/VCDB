@@ -19,30 +19,31 @@ def init_connections():
 
     connection1 = mysql.connector.connect(
         user=user, password=pwd, host='127.0.0.1', port="3306", database=globals.vcdb_name)
-    globals.connection1 = connection1
     globals.vc_cursor = connection1.cursor()
     print("VCDB connected.")
 
     connection2 = mysql.connector.connect(
         user=user, password=pwd, host='127.0.0.1', port="3306", database='userdb')
-    globals.connection2 = connection2
     globals.user_cursor = connection2.cursor()
     print("user DB connected.")
 
     # insert data for testing
-    query = "insert into user values (%s, %s, %s, %s, %s);"
-    values = ["test2", "aMember", "member.com", "testtt2", "func2"]
-    globals.vc_cursor.execute(query, values)
-    globals.connection2.commit()
-    globals.userid = "test2"
+    # query = "insert into user values (%s, %s, %s, %s, %s);"
+    # values = ["test2", "aMember", "member.com", "testtt2", "func2"]
+    # globals.vc_cursor.execute(query, values)
+    # globals.connection2.commit()
+    globals.current_uid = "461870d7-3244-40e2-b403-727f3669a547"
 
-    print(globals.connection1, globals.vc_cursor, globals.user_cursor)
     return
 
+import utils
 
 init_connections()
 
 # test functions
-checkout("func1", False)
-checkout("func3", False)
-checkout("func3", True)
+utils.getAllBranchs()
+# checkout("func1", False)
+# checkout("func3", False)
+# checkout("func3", True)
+
+

@@ -19,7 +19,7 @@ def dump(cur):
         cur = newuserconn.cursor()
         globals.user_cursor = newuserconn.cursor()
         globals.user_connect = newuserconn
-        globals.user_cursor.execute(f"use '{globals.userdb_name}';")
+        globals.user_cursor.execute(f"use {globals.userdb_name};")
         globals.user_cursor.execute('SHOW TABLES;')
         tables = []
         
