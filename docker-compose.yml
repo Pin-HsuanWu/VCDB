@@ -1,25 +1,11 @@
+version: '3'
 services:
-  mysql:
-    image: mysql:latest
-    volumes:
-      - ./mysql:/docker-entrypoint-initdb.d
-    restart: always
+  tkinter-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
-        MYSQL_ROOT_PASSWORD: mypassword
-        MYSQL_USER: myuser
-        MYSQL_PASSWORD: mypassword
-    ports:
-      - '3305:3306'
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 2
-  
-  pythonapp:
-    build: .
-    command: sh -c "sleep 10s ; python3 ./init.py"
-    ports:
-    - "5001:5001"
-    depends_on:
-      - mysql
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
 
