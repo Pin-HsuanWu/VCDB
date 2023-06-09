@@ -17,12 +17,12 @@ def create():
             user=vcdb_user, password=vcdb_pwd, host=vcdb_host, port=vcdb_port)
 
         vc_cursor = vc_connect.cursor()
-        vc_cursor.execute("CREATE DATABASE IF NOT EXISTS vcdb;")
+        vc_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {globals.vcdb_name};")
         vc_connect.commit()
 
         globals.vc_connect = vc_connect
         globals.vc_cursor = vc_cursor
-        vc_cursor.execute(f"USE '{globals.vcdb_name}';")
+        vc_cursor.execute(f"USE {globals.vcdb_name};")
 
 
         # creating tables for vcdb: branch, commit, user, merge

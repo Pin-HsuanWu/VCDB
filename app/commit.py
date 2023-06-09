@@ -103,7 +103,7 @@ def commit(msg):  # use globals
 
 
 # Commit for merge
-def commit(msg, from_merge):
+def commit_after_merge(msg, from_merge):
     try:
         # get 目前 user 的相關資訊
         query = "SELECT * FROM user WHERE uid = '%s';" % globals.current_uid

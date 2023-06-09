@@ -66,7 +66,7 @@ def checkout(newBranchName, isNewBranchOrNot):
             globals.current_bid = newBranchID
 
             # update vcdb user table: current_bid, current_version 
-            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")
+            globals.vc_cursor.execute(f"use {globals.vcdb_name};")
             query = f"SELECT bid, tail FROM {globals.vcdb_name}.branch where name = %s;"
             globals.vc_cursor.execute(query, [newBranchName])
             result = globals.vc_cursor.fetchall()[0]
@@ -75,7 +75,7 @@ def checkout(newBranchName, isNewBranchOrNot):
                 newTail = ""
             else:
                 newBranchID, newTail = result
-            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")
+            globals.vc_cursor.execute(f"use {globals.vcdb_name};")
             query = "UPDATE user SET current_bid=%s, current_version=%s WHERE uid = %s;"
             globals.vc_cursor.execute(query, [newBranchID, newTail, globals.current_uid])
             globals.vc_connect.commit()
@@ -91,7 +91,7 @@ def checkout(newBranchName, isNewBranchOrNot):
                 return "Please create a branch name that is not identical to the existing ones."
 
             # insert branch table a new row 
-            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")       
+            globals.vc_cursor.execute(f"use {globals.vcdb_name};")       
             query = "insert into branch (name) values(%s);"
             globals.vc_cursor.execute(query, [newBranchName])
             globals.vc_connect.commit()
@@ -108,7 +108,7 @@ def checkout(newBranchName, isNewBranchOrNot):
             globals.current_bid = currentBranchID
 
             # update vcdb user table: current_bid, current_version 
-            globals.vc_cursor.execute(f"use '{globals.vcdb_name}';")
+            globals.vc_cursor.execute(f"use {globals.vcdb_name};")
             query = f"SELECT bid, tail FROM {globals.vcdb_name}.branch where name = %s;"
             globals.vc_cursor.execute(query, [newBranchName])
             result = globals.vc_cursor.fetchall()[0]
