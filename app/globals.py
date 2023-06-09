@@ -26,18 +26,4 @@ def globalvar_initiation():
     current_uid = None
     vcdb_name = "vcdb"
 
-    
-    current_bid = 1
-    vc_connect = mysql.connector.connect(
-        user="root", password="dbcourse", host='127.0.0.1', port="3306", database='vcdb')
-    print("VCDB connected.")
-    vc_cursor = vc_connect.cursor()
-
-    user_connect = mysql.connector.connect(
-    user="root", password="dbcourse", host='127.0.0.1', port="3306", database='userdb')
-    print("user DB connected.")
-    user_cursor = user_connect.cursor()
-
-    current_uid = 'fakeuid'
-
 globalvar_initiation()

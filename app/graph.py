@@ -27,7 +27,7 @@ def get_commits_by_bid(bid):
 
 
 
-def draw_branch_graph(branch_info, graph):
+def draw_branch_graph(branch_info, graph, all_commit_list):
     # Get bid and tail from branch_info
     bid = branch_info[0]
     tail = branch_info[2]
@@ -37,7 +37,7 @@ def draw_branch_graph(branch_info, graph):
 
     for commit in sorted_commit_list:
         # print(commit.get)
-        graph.add_node(commit[0], subset=bid)
+        graph.add_node(commit[0], subset=bid, pos=(bid, all_commit_list.index(commit[0])*2))
         if commit[1]:
             graph.add_edge(commit[0], commit[1])
 
@@ -48,25 +48,28 @@ def draw_git_graph():
     query = "SELECT * FROM branch"
     vc_cursor.execute(query)
     branch_list = vc_cursor.fetchall()
-    # print(branch_list)
+
+    # Get all commit
+    query = "SELECT version FROM commit ORDER BY time"
+    vc_cursor.execute(query)
+    all_commit_list = vc_cursor.fetchall()
+    all_commit_list = [x[0] for x in all_commit_list]
 
     # Create a directed graph
     graph = nx.DiGraph()
 
     # Create graph for all branches
     for branch_info in branch_list:
-        graph=draw_branch_graph(branch_info, graph)
+        graph=draw_branch_graph(branch_info, graph, all_commit_list)
 
     # Get merge info
     query = "SELECT * FROM merge"
     vc_cursor.execute(query)
     merge_list = vc_cursor.fetchall()
-    print(merge_list)
     for merge in merge_list:
         graph.add_edge(merge[0], merge[2])
 
-    # Generate the graph layout
-    pos = nx.multipartite_layout(graph, subset_key='subset')
+    pos = nx.get_node_attributes(graph,'pos')
 
     # Draw the nodes
     nx.draw_networkx_nodes(graph, pos, node_color='lightblue', alpha=0.7)
@@ -74,7 +77,7 @@ def draw_git_graph():
 
     # Draw the labels
     nx.draw_networkx_labels(graph, pos, font_color='black', font_size=10)
-
+    
     # Set the plot title
     plt.title('Version Control Graph')
 
