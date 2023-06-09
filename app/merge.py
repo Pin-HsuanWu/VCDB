@@ -4,7 +4,7 @@ import uuid
 import datetime
 import time
 import globals
-from commit import commit
+from commit import commit, commit_after_merged
 
 
 # Add branch format for sql script in different branch
@@ -60,7 +60,6 @@ def check_table_conflicts(is_conflict, table_name, branch1_name, table1, branch2
         attribute_str = generate_attribute_string(nonconflict_attr_dict) +',\n'+ attribute_str
     else:
         attribute_str = generate_attribute_string(nonconflict_attr_dict)
-    # sql_script += f"DROP TABLE IF EXISTS `{table_name}`;\n"
     sql_script += f"CREATE TABLE `{table_name}` (\n{attribute_str});\n"
     return is_conflict, sql_script
 
@@ -131,9 +130,9 @@ def merge_by_merged_dict(main_branch_name, main_tail_version, target_branch_name
 
     # Successfully update userdb
     if update_result[0]:
-        # Call commit(msg) and get version number
+        # Call commit_after_merged and get version number
         msg = f"Merge {target_branch_name} into {main_branch_name}"
-        merged_version = commit(msg)
+        merged_version = commit_after_merged(msg)
         if merged_version:
             # Insert into merge table
             insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
@@ -258,7 +257,7 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
         print(update_result[1])
         # Call commit()
         msg = f"Merge {target_branch_name} into {main_branch_name} after conflict fixed"
-        merged_version = commit(msg, from_merge=True)
+        merged_version = commit_after_merged(msg)
 
         # Insert merge info into merge table
         insert_into_merge_table(merged_version, main_tail_version, target_tail_version)
@@ -269,5 +268,5 @@ def merge_after_conflict_fixed(main_branch_name, target_branch_name, fixed_sql_s
         return is_merged, update_result[1], update_result[2]
 
 
-if __name__ == '__main__':
-    merge('branch1', 'branch2')
+# if __name__ == '__main__':
+#     merge('branch1', 'branch2')
