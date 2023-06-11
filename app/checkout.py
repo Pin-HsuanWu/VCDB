@@ -28,7 +28,6 @@ def checkout(newBranchName, isNewBranchOrNot):
     # store current branche name
     query = f"SELECT * FROM {globals.vcdb_name}.branch where bid = {currentBranchID};"
     globals.vc_cursor.execute(query)
-    # print(f'branch result: {globals.vc_cursor.fetchone()}')
     branchInfo = globals.vc_cursor.fetchone()
     print(f'branchInfo: {branchInfo}')
     currentBranchName = branchInfo[1]
@@ -56,21 +55,28 @@ def checkout(newBranchName, isNewBranchOrNot):
                 print("Please commit before checking out to another branch.")
                 return "Please commit before checking out to another branch."
             # directly change userdb's schema: drop whole schema + import newBranch schema to it
-            query = f"drop schema {globals.userdb_name};"
-            globals.user_cursor.execute(query)
             targetBranchTailCommands = diff.read_sql_file(f"./branch_tail_schema/{newBranchName}.sql")
-            globals.user_cursor.execute(f"create database {globals.userdb_name};")
-            globals.user_cursor.execute(f"use {globals.userdb_name};")
+
+            # Drop all tables
+            globals.user_cursor.execute("SHOW Tables") 
+            existed_tables = globals.user_cursor.fetchall()
+            globals.user_connect.commit()
+            try:
+                for table in existed_tables:
+                    globals.user_cursor.execute(f"DROP TABLE {table[0]};")
+                    globals.user_connect.commit()
+            except Exception as e:
+                return False, f"Drop all tables failed.\nError: {e} "
+            # Create target schema
+            globals.user_cursor.execute("SET foreign_key_checks = 0;")
             for statement in targetBranchTailCommands.split(';'):
                 if len(statement.strip()) > 0:
                     globals.user_cursor.execute(statement + ';')
+                    globals.user_connect.commit()
             
             # delete tmp file
             os.remove(f"./branch_tail_schema/{fileName}")
             
-            
-
-
             # update vcdb user table: current_bid, current_version 
             globals.vc_cursor.execute(f"use {globals.vcdb_name};")
             query = f"SELECT bid, tail FROM {globals.vcdb_name}.branch where name = %s;"

@@ -87,7 +87,7 @@ class MyApp(tk.Tk):
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Welcome to DBVC system", font=("sans-serif", 30))
+        label = tk.Label(self, text="Welcome to VCDB system", font=("sans-serif", 30))
         label.pack(fill='both', expand=True)
         label.pack(pady=10, padx=10)
 
@@ -117,6 +117,7 @@ class InitPage(tk.Frame):
         pwd_label = tk.Label(self, text='Password:', font=("sans-serif", 15), justify='center')
         pwd_label.grid(row=2, column=0, sticky='e')
         pwd_entry = tk.Entry(self, textvariable=pwd_var, show='*', width=25)
+        pwd_entry.insert(0, 'dbcourse')
         pwd_entry.grid(row=2, column=1)
 
         host_label = tk.Label(self, text='Host:', font=("sans-serif", 15), justify='center')
@@ -139,7 +140,7 @@ class InitPage(tk.Frame):
 
         parse_button = tk.Button(
             self,
-            text='Parse',
+            text='Initialize',
             command=lambda: self.init_database(
                 user_var.get(), pwd_var.get(), host_var.get(), port_var.get(), userDB_var.get()
             ),
@@ -183,7 +184,7 @@ class RegisterPage(tk.Frame):
 
         parse_button = tk.Button(
             self,
-            text='Parse',
+            text='Register',
             command=lambda: self.register_user(
                 name_var.get(), email_var.get()
             ),
@@ -261,7 +262,7 @@ class LoginPage(tk.Frame):
 
         parse_button = tk.Button(
             self,
-            text='Parse',
+            text='Login',
             command=lambda: self.login_user(
                 user_var.get(), pwd_var.get(), host_var.get(
                 ), userDB_var.get(), name_var.get(), email_var.get()
@@ -416,7 +417,7 @@ class LogPage(tk.Frame):
 
         gitgraph_button = tk.Button(
             self,
-            text='Draw A Git Graph!',
+            text='Draw A VCDB Graph!',
             command=lambda: self.gitgraph(),
         )
         gitgraph_button.grid(row=3, column=0, columnspan=2, pady=10)
@@ -439,7 +440,7 @@ class LogPage(tk.Frame):
             uid = row[3]
             message = row[4]
             self.log_tree.insert("", tk.END, values=(bname, version, time, uid, message), tags=("center",))
-
+        # globals.current_version = result[0][1]
     def gitgraph(self):
         graph.draw_git_graph()
     
@@ -485,7 +486,7 @@ class MergePage(tk.Frame):
                 merge_main_var.get(), merge_target_var.get()
             ),
         )
-        merge_button.grid(row=3, column=3, columnspan=2, pady=10)
+        merge_button.grid(row=2, column=3, columnspan=2, pady=10)
 
         separator = ttk.Separator(self, orient="horizontal")
         # separator.pack(fill="x", padx=10, pady=10)
@@ -516,6 +517,7 @@ class MergePage(tk.Frame):
                 self.conflict_text_entry.insert(tk.END, conflict_script)  # Update with the return value
                 print(main_bname, target_bname)
                 # messagebox.showinfo('Merge', conflict_script)
+            messagebox.showinfo('Merge', conflict_script)
         except Exception as e:
             print(e)
             messagebox.showinfo('Merge', e)
@@ -648,7 +650,7 @@ class HopPage(tk.Frame):
             text='Get Current Version',
             command=lambda: self.get_current_version(),
         )
-        get_version_button.grid(row=1, column=4, columnspan=2, pady=10)
+        get_version_button.grid(row=1, column=2, columnspan=2, pady=10)
 
         
 
@@ -667,15 +669,19 @@ class HopPage(tk.Frame):
         # option_menu.config(width=16)
         # option_menu.grid(row=2, column=1)
 
-        # parse_button = tk.Button(
-        #     self,
-        #     text='Get All Versions of Current Branch',
-        #     command=lambda: self.getAllVersions(),
-        # )
-        # parse_button.grid(row=7, column=0, columnspan=2, pady=10)
+        version_list_label = tk.Label(self, text='Version List', font=("sans-serif", 15), justify='center')
+        version_list_label.grid(row=3, column=0, sticky='e')
+        parse_button = tk.Button(
+            self,
+            text='Get All Versions of Current Branch',
+            command=lambda: self.getAllVersions(),
+        )
+        parse_button.grid(row=3, column=2, columnspan=2, pady=10)
 
-        # self.destination_list = tk.Text(self, height=5, width=40)
-        # self.destination_list.grid(row=8, column=1)
+        self.destination_list = tk.Text(self, height=5, width=27)
+        self.destination_list.grid(row=3, column=1)
+
+
         destination_label = tk.Label(self, text='Destination', font=("sans-serif", 15), justify='center')
         destination_label.grid(row=2, column=0, sticky='e')
         destination = tk.StringVar()
@@ -691,17 +697,13 @@ class HopPage(tk.Frame):
         )
         parse_button.grid(row=10, column=0, columnspan=2, pady=10)
 
-    def getCurrentVersion(self):
-        
-        return
-
-    # def getAllVersions(self):
-    #     result = utils.getCurrentBranchAllVersionsExceptCurrent()
-    #     if len(result) == 0:
-    #         messagebox.showinfo('Hop Result:', "Do not have more versions to hop")
-    #     else:
-    #         self.destination_list.delete(1.0, tk.END)  # Clear previous content
-    #         self.destination_list.insert(1.0, result)
+    def getAllVersions(self):
+        result = utils.getCurrentBranchAllVersionsExceptCurrent()
+        if len(result) == 0:
+            messagebox.showinfo('Hop Result:', "Do not have more versions to hop")
+        else:
+            self.destination_list.delete(1.0, tk.END)  # Clear previous content
+            self.destination_list.insert(1.0, result)
     
     def hopping(self, destination):
         return_msg = hop.hop(destination)
