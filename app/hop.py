@@ -104,7 +104,7 @@ def hop(destination):
 
             globals.current_version = destination
             print("Successfully hop and you hop", hopCount, "commit(s)!")
-            msg = "Successfully hop to"+str({globals.current_version})
+            msg = f"Successfully hop to {globals.current_version}"
             return msg
             
         else:

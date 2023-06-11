@@ -7,7 +7,6 @@ from diff import get_diff
 import globals
 
 def commit(msg):  # use globals
-    
     # get 目前 user 的相關資訊
     query = "SELECT * FROM user WHERE uid = '%s';" % globals.current_uid
     globals.vc_cursor.execute(query)
@@ -77,6 +76,7 @@ def commit(msg):  # use globals
     update = "UPDATE user SET current_version = (%s), current_bid = (%s) WHERE uid = (%s);"
     val = (version, globals.current_bid, globals.current_uid)
     globals.vc_cursor.execute(update, val)
+    globals.current_version = version
     
     
     # delete old dump file and rename new dump file
@@ -140,6 +140,7 @@ def commit_after_merged(msg):
     update = "UPDATE user SET current_version = (%s), current_bid = (%s) WHERE uid = (%s);"
     val = (version, globals.current_bid, globals.current_uid)
     globals.vc_cursor.execute(update, val)
+    globals.current_version = version
     
     
     # delete old dump file and rename new dump file
